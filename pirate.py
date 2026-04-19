@@ -8,7 +8,7 @@ from panda3d.core import (
     GeomTriangles, Geom, GeomNode,
     LVector3f, LColor,
     AmbientLight, DirectionalLight,
-    LineSegs, WindowProperties, TextNode,
+    LineSegs, WindowProperties, TextNode, Shader, Fog,
 )
 
 # ---------------------------------------------------------------------------
@@ -38,7 +38,8 @@ CANNON_CHARGE_T  = 2.0
 CANNON_GRAVITY   = -28.0
 CANNON_Z         = 3.0
 
-WORLD_RANGE = 900.0
+WORLD_RANGE = 2000.0
+MINI_RANGE  =  600.0   # world units visible in the minimap circle
 MINI_HALF   = 0.16
 FULL_HALF   = 0.75
 
@@ -92,21 +93,21 @@ PORTS = [
     },
     {
         'name': 'Fort Ironcliff',
-        'pos': LVector3f(-350, 280, 0),
+        'pos': LVector3f(-750, 620, 0),
         'radius': 35.0,
         'trigger_r': 48.0,
         'sells': {'Cannonballs', 'Sea Mines', 'Food'},
     },
     {
         'name': 'Palm Cove',
-        'pos': LVector3f(120, -440, 0),
+        'pos': LVector3f(280, -950, 0),
         'radius': 28.0,
         'trigger_r': 40.0,
         'sells': {'Coconuts', 'Fruit', 'Rum'},
     },
     {
         'name': "Shipwright's Cove",
-        'pos': LVector3f(-220, -320, 0),
+        'pos': LVector3f(-500, -720, 0),
         'radius': 30.0,
         'trigger_r': 44.0,
         'sells': {'Hull Planks', 'Rope', 'Sails'},
@@ -145,10 +146,155 @@ _HP_BAR_Z    = -0.95
 
 
 # ---------------------------------------------------------------------------
+# Shared GLSL water-pattern functions (ocean + sky both use these)
+# ---------------------------------------------------------------------------
+
+_WATER_LAYER_SRC = """
+const float TWOPI = 6.283185307;
+const float SIXPI = 18.84955592;
+
+float circ(vec2 pos, vec2 c, float s) {
+    c = abs(pos - c);
+    c = min(c, 1.0 - c);
+    return smoothstep(0.0, 0.002, sqrt(s) - sqrt(dot(c, c))) * -1.0;
+}
+
+float waterlayer(vec2 uv) {
+    uv = mod(uv, 1.0);
+    float ret = 1.0;
+    ret += circ(uv, vec2(0.37378,  0.277169), 0.0268181);
+    ret += circ(uv, vec2(0.031748, 0.540372), 0.0193742);
+    ret += circ(uv, vec2(0.430044, 0.882218), 0.0232337);
+    ret += circ(uv, vec2(0.641033, 0.695106), 0.0117864);
+    ret += circ(uv, vec2(0.014640, 0.079135), 0.0299458);
+    ret += circ(uv, vec2(0.43871,  0.394445), 0.0289087);
+    ret += circ(uv, vec2(0.909446, 0.878141), 0.0284660);
+    ret += circ(uv, vec2(0.310149, 0.686637), 0.0128496);
+    ret += circ(uv, vec2(0.928617, 0.195986), 0.0152041);
+    ret += circ(uv, vec2(0.043851, 0.868153), 0.0268601);
+    ret += circ(uv, vec2(0.308619, 0.194937), 0.0080610);
+    ret += circ(uv, vec2(0.349922, 0.449714), 0.0092867);
+    ret += circ(uv, vec2(0.044956, 0.953415), 0.0231260);
+    ret += circ(uv, vec2(0.117761, 0.503309), 0.0151272);
+    ret += circ(uv, vec2(0.563517, 0.244991), 0.0292322);
+    ret += circ(uv, vec2(0.566936, 0.954457), 0.0098114);
+    ret += circ(uv, vec2(0.048994, 0.200931), 0.0178746);
+    ret += circ(uv, vec2(0.569297, 0.624893), 0.0132408);
+    ret += circ(uv, vec2(0.298347, 0.710972), 0.0114426);
+    ret += circ(uv, vec2(0.878141, 0.771279), 0.0032272);
+    ret += circ(uv, vec2(0.150995, 0.376221), 0.0021616);
+    ret += circ(uv, vec2(0.119673, 0.541984), 0.0124621);
+    ret += circ(uv, vec2(0.629598, 0.295629), 0.0198736);
+    ret += circ(uv, vec2(0.334357, 0.266278), 0.0187145);
+    ret += circ(uv, vec2(0.918044, 0.968163), 0.0182928);
+    ret += circ(uv, vec2(0.965445, 0.505026), 0.0063480);
+    ret += circ(uv, vec2(0.514847, 0.865444), 0.0062352);
+    ret += circ(uv, vec2(0.710575, 0.041513), 0.0032269);
+    ret += circ(uv, vec2(0.714030, 0.576945), 0.0215641);
+    ret += circ(uv, vec2(0.748873, 0.413325), 0.0110795);
+    ret += circ(uv, vec2(0.062337, 0.896713), 0.0236203);
+    ret += circ(uv, vec2(0.980482, 0.473849), 0.0057344);
+    ret += circ(uv, vec2(0.647463, 0.654349), 0.0188713);
+    ret += circ(uv, vec2(0.651406, 0.981297), 0.0071088);
+    ret += circ(uv, vec2(0.428928, 0.382426), 0.0298806);
+    ret += circ(uv, vec2(0.811545, 0.625680), 0.0026554);
+    ret += circ(uv, vec2(0.400787, 0.741620), 0.0048661);
+    ret += circ(uv, vec2(0.331283, 0.418536), 0.0059803);
+    ret += circ(uv, vec2(0.894762, 0.065800), 0.0076038);
+    ret += circ(uv, vec2(0.525104, 0.572233), 0.0141796);
+    ret += circ(uv, vec2(0.431526, 0.911372), 0.0213234);
+    ret += circ(uv, vec2(0.658212, 0.910553), 0.0007410);
+    ret += circ(uv, vec2(0.514523, 0.243263), 0.0270685);
+    ret += circ(uv, vec2(0.024949, 0.252872), 0.0087665);
+    ret += circ(uv, vec2(0.502214, 0.472690), 0.0234534);
+    ret += circ(uv, vec2(0.693271, 0.431469), 0.0246533);
+    ret += circ(uv, vec2(0.415000, 0.884418), 0.0271696);
+    ret += circ(uv, vec2(0.149073, 0.412040), 0.0049720);
+    ret += circ(uv, vec2(0.533816, 0.897634), 0.0065083);
+    ret += circ(uv, vec2(0.040913, 0.834060), 0.0191398);
+    ret += circ(uv, vec2(0.638585, 0.646019), 0.0206129);
+    ret += circ(uv, vec2(0.660342, 0.966541), 0.0053511);
+    ret += circ(uv, vec2(0.513783, 0.142233), 0.0047165);
+    ret += circ(uv, vec2(0.124305, 0.644263), 0.0011672);
+    ret += circ(uv, vec2(0.998710, 0.583864), 0.0107329);
+    ret += circ(uv, vec2(0.894879, 0.233289), 0.0066709);
+    ret += circ(uv, vec2(0.246286, 0.682766), 0.0041162);
+    ret += circ(uv, vec2(0.076190, 0.163270), 0.0145935);
+    ret += circ(uv, vec2(0.949386, 0.802936), 0.0100873);
+    ret += circ(uv, vec2(0.480122, 0.196554), 0.0110185);
+    ret += circ(uv, vec2(0.896854, 0.803707), 0.0139690);
+    ret += circ(uv, vec2(0.292865, 0.762973), 0.0056641);
+    ret += circ(uv, vec2(0.099559, 0.117457), 0.0086941);
+    ret += circ(uv, vec2(0.377713, 0.003354), 0.0063147);
+    ret += circ(uv, vec2(0.506365, 0.531118), 0.0144016);
+    ret += circ(uv, vec2(0.408806, 0.894771), 0.0243923);
+    ret += circ(uv, vec2(0.143579, 0.851380), 0.0041853);
+    ret += circ(uv, vec2(0.090281, 0.181775), 0.0108896);
+    ret += circ(uv, vec2(0.780695, 0.394644), 0.0047548);
+    ret += circ(uv, vec2(0.298036, 0.625531), 0.0032529);
+    ret += circ(uv, vec2(0.218423, 0.714537), 0.0015721);
+    ret += circ(uv, vec2(0.658836, 0.159556), 0.0022590);
+    ret += circ(uv, vec2(0.987324, 0.146545), 0.0288391);
+    ret += circ(uv, vec2(0.222646, 0.251694), 0.0009228);
+    ret += circ(uv, vec2(0.159826, 0.528063), 0.0060529);
+    return max(ret, 0.0);
+}
+"""
+
+# ---------------------------------------------------------------------------
+# Ocean shader
+# ---------------------------------------------------------------------------
+
+_OCEAN_VERT = """
+#version 140
+uniform mat4 p3d_ModelViewProjectionMatrix;
+in vec4 p3d_Vertex;
+out vec2 vPos;
+void main() {
+    gl_Position = p3d_ModelViewProjectionMatrix * p3d_Vertex;
+    vPos = p3d_Vertex.xy;
+}
+"""
+
+_OCEAN_FRAG = """
+#version 140
+uniform float time;
+uniform vec2 camPos;
+in vec2 vPos;
+out vec4 p3d_FragColor;
+
+const vec3 WATER_COL  = vec3(0.04, 0.38, 0.88);
+const vec3 WATER2_COL = vec3(0.04, 0.35, 0.78);
+const vec3 FOAM_COL   = vec3(0.8125, 0.9609, 0.9648);
+""" + _WATER_LAYER_SRC + """
+vec3 water(vec2 uv, float iTime) {
+    uv *= 0.25;
+    float d1 = mod(uv.x + uv.y, TWOPI);
+    float d2 = mod((uv.x + uv.y + 0.25) * 1.3, SIXPI);
+    d1 = iTime * 0.07 + d1;
+    d2 = iTime * 0.50 + d2;
+    vec2 dist = vec2(sin(d1)*0.15 + sin(d2)*0.05,
+                     cos(d1)*0.15 + cos(d2)*0.05);
+    vec3 col = mix(WATER_COL, WATER2_COL, waterlayer(uv + dist.xy));
+    col = mix(col, FOAM_COL, waterlayer(vec2(1.0) - uv - dist.yx));
+    return col;
+}
+
+void main() {
+    vec2 uv  = vPos * (100.0 / 1800.0);
+    vec3 col = water(uv, time * 2.0);
+    float d  = length(vPos - camPos);
+    float fade = 1.0 - smoothstep(200.0, 1000.0, d);
+    vec3 sky = vec3(0.40, 0.68, 0.92);
+    p3d_FragColor = vec4(mix(sky, col, fade), 1.0);
+}
+"""
+
+# ---------------------------------------------------------------------------
 # Geometry helpers
 # ---------------------------------------------------------------------------
 
-def _make_ocean(size=900):
+def _make_ocean(size=2000):
     fmt   = GeomVertexFormat.getV3c4()
     vdata = GeomVertexData('ocean', fmt, Geom.UHStatic)
     vdata.setNumRows(4)
@@ -239,6 +385,7 @@ class PirateGame(ShowBase):
         self.ship_speed   = 0.0
         self.cam_yaw      = 270.0   # camera west of ship = behind it
         self.cam_pitch    = 15.0
+        self.paused       = False
 
         self.setBackgroundColor(0.40, 0.68, 0.92, 1)
 
@@ -248,6 +395,7 @@ class PirateGame(ShowBase):
         self.win.requestProperties(props)
 
         self._setup_lighting()
+        self._setup_fog()
         self._setup_ocean()
         self._setup_ship()
         self._setup_islands()
@@ -259,12 +407,50 @@ class PirateGame(ShowBase):
         self._setup_tooltip()
         self._setup_inventory()
 
+        self._setup_pause_menu()
+
         self.taskMgr.add(self._update, 'update')
-        self.accept('escape', self.userExit)
+        self.accept('escape', self._toggle_pause)
 
     # ------------------------------------------------------------------
     # Setup
     # ------------------------------------------------------------------
+
+    def _setup_pause_menu(self):
+        self.pause_panel = DirectFrame(
+            parent=self.aspect2d,
+            frameColor=(0.04, 0.10, 0.25, 0.97),
+            frameSize=(-0.42, 0.42, -0.22, 0.22),
+            pos=(0, 0, 0),
+        )
+        OnscreenText(
+            parent=self.pause_panel, text='PAUSED',
+            pos=(0, 0.12), scale=0.09,
+            fg=(1.0, 0.88, 0.45, 1), align=TextNode.ACenter,
+        )
+        DirectButton(
+            parent=self.pause_panel,
+            text='Leave Game', text_scale=0.06,
+            text_fg=(1, 1, 1, 1),
+            frameSize=(-0.28, 0.28, -0.055, 0.075),
+            frameColor=(0.55, 0.10, 0.10, 1),
+            relief=1,
+            pos=(0, 0, -0.06),
+            command=self.userExit,
+        )
+        self.pause_panel.hide()
+
+    def _toggle_pause(self):
+        self.paused = not self.paused
+        props = WindowProperties()
+        if self.paused:
+            self.pause_panel.show()
+            props.setCursorHidden(False)
+        else:
+            self.pause_panel.hide()
+            if not self.docked and not self.inv_open:
+                props.setCursorHidden(True)
+        self.win.requestProperties(props)
 
     def _setup_lighting(self):
         sun = DirectionalLight('sun')
@@ -276,9 +462,21 @@ class PirateGame(ShowBase):
         amb.setColor(LColor(0.45, 0.48, 0.55, 1))
         self.render.setLight(self.render.attachNewNode(amb))
 
+    def _setup_fog(self):
+        fog = Fog('sea_fog')
+        fog.setColor(0.40, 0.68, 0.92)   # match sky background colour
+        fog.setLinearRange(200, 1000)     # starts at 200 units, fully opaque at 1000
+        fog.setLinearFallback(45, 200, 1000)
+        self.render.setFog(fog)
+        self.ocean_np_fog = fog           # keep ref if needed later
+
     def _setup_ocean(self):
-        self.render.attachNewNode(_make_ocean())
-        self.render.attachNewNode(_make_ocean_grid())
+        self.ocean_np = self.render.attachNewNode(_make_ocean())
+        self.ocean_np.setShader(Shader.make(Shader.SL_GLSL, _OCEAN_VERT, _OCEAN_FRAG))
+        self.ocean_np.setShaderInput('time', 0.0)
+        self.ocean_np.setShaderInput('camPos', 0.0, 0.0)
+        self.ocean_np.setLightOff()   # flat cel shading — no lighting
+        self.ocean_np.setFogOff()     # ocean has its own proximity fade in the shader
 
     def _setup_ship(self):
         self.ship_np = self.render.attachNewNode('ship_root')
@@ -489,6 +687,8 @@ class PirateGame(ShowBase):
 
     def _update(self, task):
         dt = globalClock.getDt()
+        self.ocean_np.setShaderInput('time', globalClock.getFrameTime())
+        self.ocean_np.setShaderInput('camPos', self.camera.getX(), self.camera.getY())
         self._update_ship(dt)
         self._update_camera()
         self._update_aim(dt)
@@ -580,30 +780,47 @@ class PirateGame(ShowBase):
         self.mini_cz = 1.0 - MINI_HALF - 0.03
         MCX, MCZ = self.mini_cx, self.mini_cz
 
-        # ── Minimap ───────────────────────────────────────────────────────
-        DirectFrame(parent=a2d,
-                    frameColor=(0.03, 0.10, 0.25, 0.82),
-                    frameSize=(-MINI_HALF, MINI_HALF, -MINI_HALF, MINI_HALF),
-                    pos=(MCX, 0, MCZ))
+        # ── Minimap (circular, player-centred) ───────────────────────────
+        # Filled disc background
+        N = 48
+        fmt   = GeomVertexFormat.getV3c4()
+        vdata = GeomVertexData('mini_disc', fmt, Geom.UHStatic)
+        vdata.setNumRows(N + 2)
+        vw = GeomVertexWriter(vdata, 'vertex')
+        cw = GeomVertexWriter(vdata, 'color')
+        bg = (0.03, 0.10, 0.25, 0.88)
+        vw.addData3(MCX, 0, MCZ); cw.addData4(*bg)
+        for i in range(N + 1):
+            a = 2 * math.pi * i / N
+            vw.addData3(MCX + MINI_HALF * math.cos(a), 0, MCZ + MINI_HALF * math.sin(a))
+            cw.addData4(*bg)
+        disc_tris = GeomTriangles(Geom.UHStatic)
+        for i in range(N):
+            disc_tris.addVertices(0, i + 1, i + 2)
+        disc_g = Geom(vdata); disc_g.addPrimitive(disc_tris)
+        disc_gn = GeomNode('mini_disc'); disc_gn.addGeom(disc_g)
+        a2d.attachNewNode(disc_gn)
 
+        # Circle border
         bls = LineSegs()
-        bls.setColor(0.50, 0.62, 0.85, 1); bls.setThickness(1.5)
-        h = MINI_HALF
-        bls.moveTo(MCX-h, 0, MCZ-h)
-        for dx, dz in [(h,-h),(h,h),(-h,h),(-h,-h)]:
-            bls.drawTo(MCX+dx, 0, MCZ+dz)
+        bls.setColor(0.50, 0.62, 0.85, 1); bls.setThickness(2.0)
+        for i in range(N + 1):
+            a = 2 * math.pi * i / N
+            x = MCX + MINI_HALF * math.cos(a)
+            z = MCZ + MINI_HALF * math.sin(a)
+            if i == 0: bls.moveTo(x, 0, z)
+            else:       bls.drawTo(x, 0, z)
         a2d.attachNewNode(bls.create())
 
-        for port in PORTS:
-            ix = MCX + port['pos'].x * ms
-            iz = MCZ + port['pos'].y * ms
-            DirectFrame(parent=a2d, frameColor=(0.45, 0.88, 0.32, 1),
-                        frameSize=(-0.009, 0.009, -0.009, 0.009),
-                        pos=(ix, 0, iz))
-            OnscreenText(text=port['name'], pos=(ix, iz + 0.022),
-                         scale=0.028, fg=(0.65, 1.0, 0.45, 1),
-                         shadow=(0,0,0,0.85), align=TextNode.ACenter)
+        # Port dots — repositioned every frame in _update_minimap
+        self.mini_port_dots = []
+        for _ in PORTS:
+            dot = DirectFrame(parent=a2d, frameColor=(0.45, 0.88, 0.32, 1),
+                              frameSize=(-0.009, 0.009, -0.009, 0.009),
+                              pos=(MCX, 0, MCZ))
+            self.mini_port_dots.append(dot)
 
+        # Player arrow — always at centre
         als = LineSegs()
         als.setColor(1.0, 0.95, 0.1, 1); als.setThickness(2.0)
         s = 0.010
@@ -673,24 +890,48 @@ class PirateGame(ShowBase):
             self.fullmap_np.hide()
 
     def _update_minimap(self):
-        ms  = MINI_HALF / WORLD_RANGE
         MCX, MCZ = self.mini_cx, self.mini_cz
-        mx  = MCX + self.ship_pos.x * ms
-        mz  = MCZ + self.ship_pos.y * ms
-        mx  = max(MCX - MINI_HALF + 0.012, min(MCX + MINI_HALF - 0.012, mx))
-        mz  = max(MCZ - MINI_HALF + 0.012, min(MCZ + MINI_HALF - 0.012, mz))
-        self.mini_player.setPos(mx, 0, mz)
-        self.mini_player.setP(-self.ship_heading)
+        R   = MINI_HALF
+        yr  = math.radians(self.cam_yaw)
+        cyr = math.cos(yr)
+        syr = math.sin(yr)
+
+        # Player arrow at centre, rotated to match camera orientation
+        self.mini_player.setPos(MCX, 0, MCZ)
+        self.mini_player.setP(-(self.ship_heading + self.cam_yaw + 180))
+
+        # Port dots — rotated so camera-forward = minimap-up
+        for dot, port in zip(self.mini_port_dots, PORTS):
+            dx = port['pos'].x - self.ship_pos.x
+            dy = port['pos'].y - self.ship_pos.y
+            dist = math.sqrt(dx*dx + dy*dy) or 0.001
+            # Rotate offset into camera-relative screen space
+            rx = -cyr * dx + syr * dy
+            rz = -syr * dx - cyr * dy
+            ratio = dist / MINI_RANGE
+            if ratio <= 1.0:
+                sx = MCX + rx / MINI_RANGE * R
+                sz = MCZ + rz / MINI_RANGE * R
+                dot['frameSize']  = (-0.009, 0.009, -0.009, 0.009)
+                dot['frameColor'] = (0.45, 0.88, 0.32, 1)
+            else:
+                # Clamp direction to circle edge
+                rdist = math.sqrt(rx*rx + rz*rz) or 0.001
+                sx = MCX + (rx / rdist) * R * 0.93
+                sz = MCZ + (rz / rdist) * R * 0.93
+                dot['frameSize']  = (-0.006, 0.006, -0.006, 0.006)
+                dot['frameColor'] = (0.45, 0.88, 0.32, 0.7)
+            dot.setPos(sx, 0, sz)
 
         if not self.fullmap_np.isHidden():
-            fs  = FULL_HALF / WORLD_RANGE
-            fx  = max(-FULL_HALF + 0.025, min(FULL_HALF - 0.025, self.ship_pos.x * fs))
-            fz  = max(-FULL_HALF + 0.025, min(FULL_HALF - 0.025, self.ship_pos.y * fs))
+            fs = FULL_HALF / WORLD_RANGE
+            fx = max(-FULL_HALF + 0.025, min(FULL_HALF - 0.025, self.ship_pos.x * fs))
+            fz = max(-FULL_HALF + 0.025, min(FULL_HALF - 0.025, self.ship_pos.y * fs))
             self.full_player.setPos(fx, 0, fz)
             self.full_player.setP(-self.ship_heading)
 
     def _update_camera(self):
-        if self.docked or self.inv_open:
+        if self.docked or self.inv_open or self.paused:
             return
         if self.mouseWatcherNode.hasMouse():
             dx = self.mouseWatcherNode.getMouseX()
@@ -862,12 +1103,15 @@ class PirateGame(ShowBase):
             align=TextNode.ALeft, mayChange=True,
         )
 
-        # ── Dock prompt ───────────────────────────────────────────────────
+        # ── Bottom-right key hints ────────────────────────────────────────
+        _kw = dict(scale=0.048, fg=(1.0, 0.88, 0.55, 1),
+                   shadow=(0, 0, 0, 0.75), align=TextNode.ARight)
+        _x  = 1.55
+        OnscreenText(text='[M] Map',       pos=(_x, -0.72), **_kw)
+        OnscreenText(text='[I] Inventory', pos=(_x, -0.78), **_kw)
+        OnscreenText(text='[ESC] Menu',    pos=(_x, -0.84), **_kw)
         self.dock_prompt = OnscreenText(
-            text='[E] Dock', pos=(0, -0.82), scale=0.07,
-            fg=(1.0, 0.95, 0.5, 1), shadow=(0, 0, 0, 0.9),
-            align=TextNode.ACenter, mayChange=True,
-        )
+            text='', pos=(_x, -0.90), mayChange=True, **_kw)
         self.dock_prompt.hide()
 
         # ── Trade panel ───────────────────────────────────────────────────
@@ -1143,7 +1387,7 @@ class PirateGame(ShowBase):
                 break
 
         if self.near_port_idx >= 0 and prev_idx < 0 and not self.docked:
-            self.dock_prompt.setText(f'[E] Dock at {PORTS[self.near_port_idx]["name"]}')
+            self.dock_prompt.setText('[E] Dock')
             self.dock_prompt.show()
         elif self.near_port_idx < 0 and prev_idx >= 0:
             self.dock_prompt.hide()
