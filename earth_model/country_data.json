@@ -1,0 +1,1207 @@
+{
+  "Afghanistan": {
+    "area_km2": 652230,
+    "population": 40099462,
+    "power": 4.39
+  },
+  "Albania": {
+    "area_km2": 28748,
+    "population": 2877797,
+    "power": 0.25
+  },
+  "Algeria": {
+    "area_km2": 2381741,
+    "population": 44759467,
+    "power": 8.87
+  },
+  "American Samoa": {
+    "area_km2": 199,
+    "population": 55197,
+    "power": 0.0
+  },
+  "Andorra": {
+    "area_km2": 468,
+    "population": 79824,
+    "power": 0.01
+  },
+  "Angola": {
+    "area_km2": 1246700,
+    "population": 34503774,
+    "power": 5.63
+  },
+  "Anguilla": {
+    "area_km2": 91,
+    "population": 18090,
+    "power": 0.0
+  },
+  "Antarctica": {
+    "area_km2": 14000000,
+    "population": 1000,
+    "power": 0.1
+  },
+  "Antigua and Barb.": {
+    "area_km2": 443,
+    "population": 93763,
+    "power": 0.01
+  },
+  "Argentina": {
+    "area_km2": 2780400,
+    "population": 45773884,
+    "power": 9.69
+  },
+  "Armenia": {
+    "area_km2": 29743,
+    "population": 2780469,
+    "power": 0.25
+  },
+  "Aruba": {
+    "area_km2": 180,
+    "population": 106277,
+    "power": 0.0
+  },
+  "Ashmore and Cartier Is.": {
+    "area_km2": 5,
+    "population": 10,
+    "power": 0.0
+  },
+  "Australia": {
+    "area_km2": 7741220,
+    "population": 26177413,
+    "power": 12.23
+  },
+  "Austria": {
+    "area_km2": 83871,
+    "population": 9107112,
+    "power": 0.75
+  },
+  "Azerbaijan": {
+    "area_km2": 86600,
+    "population": 10420112,
+    "power": 0.82
+  },
+  "Bahamas": {
+    "area_km2": 13943,
+    "population": 393248,
+    "power": 0.06
+  },
+  "Bahrain": {
+    "area_km2": 778,
+    "population": 1463265,
+    "power": 0.03
+  },
+  "Bangladesh": {
+    "area_km2": 147570,
+    "population": 169356251,
+    "power": 4.29
+  },
+  "Barbados": {
+    "area_km2": 430,
+    "population": 281200,
+    "power": 0.01
+  },
+  "Belarus": {
+    "area_km2": 207600,
+    "population": 9449323,
+    "power": 1.2
+  },
+  "Belgium": {
+    "area_km2": 30528,
+    "population": 11584008,
+    "power": 0.51
+  },
+  "Belize": {
+    "area_km2": 22966,
+    "population": 405272,
+    "power": 0.08
+  },
+  "Benin": {
+    "area_km2": 112622,
+    "population": 13301694,
+    "power": 1.05
+  },
+  "Bermuda": {
+    "area_km2": 54,
+    "population": 64000,
+    "power": 0.0
+  },
+  "Bhutan": {
+    "area_km2": 38394,
+    "population": 782455,
+    "power": 0.15
+  },
+  "Bolivia": {
+    "area_km2": 1098581,
+    "population": 12079472,
+    "power": 3.13
+  },
+  "Bosnia and Herz.": {
+    "area_km2": 51197,
+    "population": 3270943,
+    "power": 0.35
+  },
+  "Botswana": {
+    "area_km2": 581730,
+    "population": 2630296,
+    "power": 1.06
+  },
+  "Br. Indian Ocean Ter.": {
+    "area_km2": 60,
+    "population": 3000,
+    "power": 0.0
+  },
+  "Brazil": {
+    "area_km2": 8515767,
+    "population": 214326223,
+    "power": 36.69
+  },
+  "British Virgin Is.": {
+    "area_km2": 151,
+    "population": 31305,
+    "power": 0.0
+  },
+  "Brunei": {
+    "area_km2": 5765,
+    "population": 441532,
+    "power": 0.04
+  },
+  "Bulgaria": {
+    "area_km2": 110879,
+    "population": 6520314,
+    "power": 0.73
+  },
+  "Burkina Faso": {
+    "area_km2": 274200,
+    "population": 22100683,
+    "power": 2.11
+  },
+  "Burundi": {
+    "area_km2": 27834,
+    "population": 12888040,
+    "power": 0.51
+  },
+  "Cabo Verde": {
+    "area_km2": 4033,
+    "population": 593149,
+    "power": 0.04
+  },
+  "Cambodia": {
+    "area_km2": 181035,
+    "population": 16767842,
+    "power": 1.5
+  },
+  "Cameroon": {
+    "area_km2": 475442,
+    "population": 27911548,
+    "power": 3.13
+  },
+  "Canada": {
+    "area_km2": 9984670,
+    "population": 38781292,
+    "power": 16.9
+  },
+  "Cayman Is.": {
+    "area_km2": 264,
+    "population": 65722,
+    "power": 0.0
+  },
+  "Central African Rep.": {
+    "area_km2": 622984,
+    "population": 5579144,
+    "power": 1.6
+  },
+  "Chad": {
+    "area_km2": 1284000,
+    "population": 17413580,
+    "power": 4.06
+  },
+  "Chile": {
+    "area_km2": 756102,
+    "population": 19629590,
+    "power": 3.31
+  },
+  "China": {
+    "area_km2": 9596960,
+    "population": 1412600000,
+    "power": 100.0
+  },
+  "Colombia": {
+    "area_km2": 1141748,
+    "population": 51874024,
+    "power": 6.61
+  },
+  "Comoros": {
+    "area_km2": 2235,
+    "population": 836774,
+    "power": 0.04
+  },
+  "Congo": {
+    "area_km2": 342000,
+    "population": 5835806,
+    "power": 1.21
+  },
+  "Cook Is.": {
+    "area_km2": 236,
+    "population": 17564,
+    "power": 0.0
+  },
+  "Costa Rica": {
+    "area_km2": 51100,
+    "population": 5212173,
+    "power": 0.44
+  },
+  "Croatia": {
+    "area_km2": 56594,
+    "population": 3888529,
+    "power": 0.4
+  },
+  "Cuba": {
+    "area_km2": 109884,
+    "population": 11113215,
+    "power": 0.95
+  },
+  "Curaçao": {
+    "area_km2": 444,
+    "population": 152369,
+    "power": 0.01
+  },
+  "Cyprus": {
+    "area_km2": 9251,
+    "population": 1244188,
+    "power": 0.09
+  },
+  "Czechia": {
+    "area_km2": 78866,
+    "population": 10900555,
+    "power": 0.8
+  },
+  "Côte d'Ivoire": {
+    "area_km2": 322463,
+    "population": 27053585,
+    "power": 2.54
+  },
+  "Dem. Rep. Congo": {
+    "area_km2": 2344858,
+    "population": 99010212,
+    "power": 13.09
+  },
+  "Denmark": {
+    "area_km2": 43094,
+    "population": 5910913,
+    "power": 0.43
+  },
+  "Djibouti": {
+    "area_km2": 23200,
+    "population": 994974,
+    "power": 0.13
+  },
+  "Dominica": {
+    "area_km2": 751,
+    "population": 71986,
+    "power": 0.01
+  },
+  "Dominican Rep.": {
+    "area_km2": 48670,
+    "population": 10760028,
+    "power": 0.62
+  },
+  "Ecuador": {
+    "area_km2": 283561,
+    "population": 17797737,
+    "power": 1.93
+  },
+  "Egypt": {
+    "area_km2": 1001450,
+    "population": 104258327,
+    "power": 8.78
+  },
+  "El Salvador": {
+    "area_km2": 21041,
+    "population": 6314167,
+    "power": 0.31
+  },
+  "Eq. Guinea": {
+    "area_km2": 28051,
+    "population": 1449896,
+    "power": 0.17
+  },
+  "Eritrea": {
+    "area_km2": 117600,
+    "population": 3546427,
+    "power": 0.55
+  },
+  "Estonia": {
+    "area_km2": 45228,
+    "population": 1322765,
+    "power": 0.21
+  },
+  "Eswatini": {
+    "area_km2": 17364,
+    "population": 1192215,
+    "power": 0.12
+  },
+  "Ethiopia": {
+    "area_km2": 1104300,
+    "population": 123379924,
+    "power": 10.03
+  },
+  "Faeroe Is.": {
+    "area_km2": 1393,
+    "population": 53199,
+    "power": 0.01
+  },
+  "Falkland Is.": {
+    "area_km2": 12173,
+    "population": 3480,
+    "power": 0.01
+  },
+  "Fiji": {
+    "area_km2": 18274,
+    "population": 929716,
+    "power": 0.11
+  },
+  "Finland": {
+    "area_km2": 338145,
+    "population": 5541274,
+    "power": 1.18
+  },
+  "Fr. Polynesia": {
+    "area_km2": 4167,
+    "population": 280904,
+    "power": 0.03
+  },
+  "Fr. S. Antarctic Lands": {
+    "area_km2": 439781,
+    "population": 140,
+    "power": 0.01
+  },
+  "France": {
+    "area_km2": 551695,
+    "population": 68042591,
+    "power": 5.26
+  },
+  "Gabon": {
+    "area_km2": 267667,
+    "population": 2341879,
+    "power": 0.68
+  },
+  "Gambia": {
+    "area_km2": 11295,
+    "population": 2705992,
+    "power": 0.15
+  },
+  "Georgia": {
+    "area_km2": 69700,
+    "population": 3712000,
+    "power": 0.44
+  },
+  "Germany": {
+    "area_km2": 357114,
+    "population": 83794770,
+    "power": 4.7
+  },
+  "Ghana": {
+    "area_km2": 238533,
+    "population": 32395450,
+    "power": 2.39
+  },
+  "Greece": {
+    "area_km2": 131957,
+    "population": 10432481,
+    "power": 1.01
+  },
+  "Greenland": {
+    "area_km2": 2166086,
+    "population": 56648,
+    "power": 0.3
+  },
+  "Grenada": {
+    "area_km2": 344,
+    "population": 124610,
+    "power": 0.01
+  },
+  "Guam": {
+    "area_km2": 549,
+    "population": 168775,
+    "power": 0.01
+  },
+  "Guatemala": {
+    "area_km2": 108889,
+    "population": 17843908,
+    "power": 1.2
+  },
+  "Guernsey": {
+    "area_km2": 78,
+    "population": 63026,
+    "power": 0.0
+  },
+  "Guinea": {
+    "area_km2": 245857,
+    "population": 13531906,
+    "power": 1.57
+  },
+  "Guinea-Bissau": {
+    "area_km2": 36125,
+    "population": 2026778,
+    "power": 0.23
+  },
+  "Guyana": {
+    "area_km2": 214969,
+    "population": 790326,
+    "power": 0.35
+  },
+  "Haiti": {
+    "area_km2": 27750,
+    "population": 11447569,
+    "power": 0.48
+  },
+  "Heard I. and McDonald Is.": {
+    "area_km2": 372,
+    "population": 0,
+    "power": 0.0
+  },
+  "Honduras": {
+    "area_km2": 112492,
+    "population": 10278345,
+    "power": 0.92
+  },
+  "Hong Kong": {
+    "area_km2": 1104,
+    "population": 7491609,
+    "power": 0.08
+  },
+  "Hungary": {
+    "area_km2": 93028,
+    "population": 9967308,
+    "power": 0.83
+  },
+  "Iceland": {
+    "area_km2": 103000,
+    "population": 372899,
+    "power": 0.17
+  },
+  "India": {
+    "area_km2": 3287263,
+    "population": 1428627663,
+    "power": 58.86
+  },
+  "Indian Ocean Ter.": {
+    "area_km2": 45,
+    "population": 0,
+    "power": 0.0
+  },
+  "Indonesia": {
+    "area_km2": 1904569,
+    "population": 277534122,
+    "power": 19.75
+  },
+  "Iran": {
+    "area_km2": 1648195,
+    "population": 87923432,
+    "power": 10.34
+  },
+  "Iraq": {
+    "area_km2": 438317,
+    "population": 41179350,
+    "power": 3.65
+  },
+  "Ireland": {
+    "area_km2": 70273,
+    "population": 5056935,
+    "power": 0.51
+  },
+  "Isle of Man": {
+    "area_km2": 572,
+    "population": 84584,
+    "power": 0.01
+  },
+  "Israel": {
+    "area_km2": 20770,
+    "population": 9174520,
+    "power": 0.37
+  },
+  "Italy": {
+    "area_km2": 301340,
+    "population": 58870762,
+    "power": 3.62
+  },
+  "Jamaica": {
+    "area_km2": 10991,
+    "population": 2820982,
+    "power": 0.15
+  },
+  "Japan": {
+    "area_km2": 377975,
+    "population": 123294513,
+    "power": 5.86
+  },
+  "Jersey": {
+    "area_km2": 116,
+    "population": 103267,
+    "power": 0.0
+  },
+  "Jordan": {
+    "area_km2": 89342,
+    "population": 10203140,
+    "power": 0.82
+  },
+  "Kazakhstan": {
+    "area_km2": 2724900,
+    "population": 19606633,
+    "power": 6.28
+  },
+  "Kenya": {
+    "area_km2": 580367,
+    "population": 55100586,
+    "power": 4.86
+  },
+  "Kiribati": {
+    "area_km2": 811,
+    "population": 119449,
+    "power": 0.01
+  },
+  "Kosovo": {
+    "area_km2": 10887,
+    "population": 1775378,
+    "power": 0.12
+  },
+  "Kuwait": {
+    "area_km2": 17818,
+    "population": 4294621,
+    "power": 0.24
+  },
+  "Kyrgyzstan": {
+    "area_km2": 199951,
+    "population": 6735347,
+    "power": 1.0
+  },
+  "Laos": {
+    "area_km2": 236800,
+    "population": 7369039,
+    "power": 1.13
+  },
+  "Latvia": {
+    "area_km2": 64589,
+    "population": 1830211,
+    "power": 0.3
+  },
+  "Lebanon": {
+    "area_km2": 10452,
+    "population": 5592631,
+    "power": 0.21
+  },
+  "Lesotho": {
+    "area_km2": 30355,
+    "population": 2281454,
+    "power": 0.23
+  },
+  "Liberia": {
+    "area_km2": 111369,
+    "population": 5302681,
+    "power": 0.66
+  },
+  "Libya": {
+    "area_km2": 1759541,
+    "population": 7252573,
+    "power": 3.07
+  },
+  "Liechtenstein": {
+    "area_km2": 160,
+    "population": 38250,
+    "power": 0.0
+  },
+  "Lithuania": {
+    "area_km2": 65300,
+    "population": 2718352,
+    "power": 0.36
+  },
+  "Luxembourg": {
+    "area_km2": 2586,
+    "population": 660809,
+    "power": 0.04
+  },
+  "Macao": {
+    "area_km2": 30,
+    "population": 672600,
+    "power": 0.0
+  },
+  "Macedonia": {
+    "area_km2": 25713,
+    "population": 2093599,
+    "power": 0.2
+  },
+  "Madagascar": {
+    "area_km2": 587041,
+    "population": 28915653,
+    "power": 3.54
+  },
+  "Malawi": {
+    "area_km2": 118484,
+    "population": 20405317,
+    "power": 1.34
+  },
+  "Malaysia": {
+    "area_km2": 329847,
+    "population": 33573874,
+    "power": 2.86
+  },
+  "Maldives": {
+    "area_km2": 300,
+    "population": 521021,
+    "power": 0.01
+  },
+  "Mali": {
+    "area_km2": 1240192,
+    "population": 22395489,
+    "power": 4.53
+  },
+  "Malta": {
+    "area_km2": 316,
+    "population": 533286,
+    "power": 0.01
+  },
+  "Marshall Is.": {
+    "area_km2": 181,
+    "population": 42050,
+    "power": 0.0
+  },
+  "Mauritania": {
+    "area_km2": 1030700,
+    "population": 4614974,
+    "power": 1.87
+  },
+  "Mauritius": {
+    "area_km2": 2040,
+    "population": 1261208,
+    "power": 0.04
+  },
+  "Mexico": {
+    "area_km2": 1964375,
+    "population": 127575529,
+    "power": 13.6
+  },
+  "Micronesia": {
+    "area_km2": 702,
+    "population": 113131,
+    "power": 0.01
+  },
+  "Moldova": {
+    "area_km2": 33851,
+    "population": 2617821,
+    "power": 0.26
+  },
+  "Monaco": {
+    "area_km2": 2,
+    "population": 36686,
+    "power": 0.0
+  },
+  "Mongolia": {
+    "area_km2": 1564116,
+    "population": 3398366,
+    "power": 1.98
+  },
+  "Montenegro": {
+    "area_km2": 13812,
+    "population": 626485,
+    "power": 0.08
+  },
+  "Montserrat": {
+    "area_km2": 102,
+    "population": 4390,
+    "power": 0.0
+  },
+  "Morocco": {
+    "area_km2": 710850,
+    "population": 37457971,
+    "power": 4.43
+  },
+  "Mozambique": {
+    "area_km2": 801590,
+    "population": 32790338,
+    "power": 4.4
+  },
+  "Myanmar": {
+    "area_km2": 676578,
+    "population": 54409800,
+    "power": 5.21
+  },
+  "N. Cyprus": {
+    "area_km2": 3355,
+    "population": 326000,
+    "power": 0.03
+  },
+  "N. Mariana Is.": {
+    "area_km2": 464,
+    "population": 57557,
+    "power": 0.0
+  },
+  "Namibia": {
+    "area_km2": 824292,
+    "population": 2567012,
+    "power": 1.25
+  },
+  "Nauru": {
+    "area_km2": 21,
+    "population": 10894,
+    "power": 0.0
+  },
+  "Nepal": {
+    "area_km2": 147181,
+    "population": 29164578,
+    "power": 1.78
+  },
+  "Netherlands": {
+    "area_km2": 41543,
+    "population": 17618299,
+    "power": 0.73
+  },
+  "New Caledonia": {
+    "area_km2": 18575,
+    "population": 271407,
+    "power": 0.06
+  },
+  "New Zealand": {
+    "area_km2": 270467,
+    "population": 5123400,
+    "power": 1.01
+  },
+  "Nicaragua": {
+    "area_km2": 130373,
+    "population": 6948392,
+    "power": 0.82
+  },
+  "Niger": {
+    "area_km2": 1267000,
+    "population": 25252722,
+    "power": 4.86
+  },
+  "Nigeria": {
+    "area_km2": 923768,
+    "population": 218541212,
+    "power": 12.2
+  },
+  "Niue": {
+    "area_km2": 260,
+    "population": 1620,
+    "power": 0.0
+  },
+  "Norfolk Island": {
+    "area_km2": 35,
+    "population": 2188,
+    "power": 0.0
+  },
+  "North Korea": {
+    "area_km2": 120538,
+    "population": 25971909,
+    "power": 1.52
+  },
+  "Norway": {
+    "area_km2": 323802,
+    "population": 5474360,
+    "power": 1.14
+  },
+  "Oman": {
+    "area_km2": 309500,
+    "population": 4576298,
+    "power": 1.02
+  },
+  "Pakistan": {
+    "area_km2": 881913,
+    "population": 231402117,
+    "power": 12.27
+  },
+  "Palau": {
+    "area_km2": 459,
+    "population": 17606,
+    "power": 0.0
+  },
+  "Palestine": {
+    "area_km2": 6220,
+    "population": 5250072,
+    "power": 0.16
+  },
+  "Panama": {
+    "area_km2": 75417,
+    "population": 4351267,
+    "power": 0.49
+  },
+  "Papua New Guinea": {
+    "area_km2": 462840,
+    "population": 10329931,
+    "power": 1.88
+  },
+  "Paraguay": {
+    "area_km2": 406752,
+    "population": 6780744,
+    "power": 1.43
+  },
+  "Peru": {
+    "area_km2": 1285216,
+    "population": 33359418,
+    "power": 5.62
+  },
+  "Philippines": {
+    "area_km2": 342353,
+    "population": 117337368,
+    "power": 5.44
+  },
+  "Pitcairn Is.": {
+    "area_km2": 47,
+    "population": 50,
+    "power": 0.0
+  },
+  "Poland": {
+    "area_km2": 312685,
+    "population": 37846611,
+    "power": 2.95
+  },
+  "Portugal": {
+    "area_km2": 92212,
+    "population": 10247605,
+    "power": 0.83
+  },
+  "Puerto Rico": {
+    "area_km2": 9104,
+    "population": 3221789,
+    "power": 0.15
+  },
+  "Qatar": {
+    "area_km2": 11586,
+    "population": 2695122,
+    "power": 0.15
+  },
+  "Romania": {
+    "area_km2": 238397,
+    "population": 19004114,
+    "power": 1.83
+  },
+  "Russia": {
+    "area_km2": 17098242,
+    "population": 144444359,
+    "power": 42.68
+  },
+  "Rwanda": {
+    "area_km2": 26338,
+    "population": 13776698,
+    "power": 0.52
+  },
+  "S. Geo. and the Is.": {
+    "area_km2": 3903,
+    "population": 30,
+    "power": 0.0
+  },
+  "S. Sudan": {
+    "area_km2": 619745,
+    "population": 10913164,
+    "power": 2.23
+  },
+  "Saint Helena": {
+    "area_km2": 394,
+    "population": 6000,
+    "power": 0.0
+  },
+  "Saint Lucia": {
+    "area_km2": 616,
+    "population": 179651,
+    "power": 0.01
+  },
+  "Samoa": {
+    "area_km2": 2831,
+    "population": 218764,
+    "power": 0.02
+  },
+  "San Marino": {
+    "area_km2": 61,
+    "population": 33660,
+    "power": 0.0
+  },
+  "Saudi Arabia": {
+    "area_km2": 2149690,
+    "population": 35950396,
+    "power": 7.55
+  },
+  "Senegal": {
+    "area_km2": 196722,
+    "population": 17196301,
+    "power": 1.58
+  },
+  "Serbia": {
+    "area_km2": 77474,
+    "population": 6834326,
+    "power": 0.62
+  },
+  "Seychelles": {
+    "area_km2": 455,
+    "population": 98462,
+    "power": 0.01
+  },
+  "Siachen Glacier": {
+    "area_km2": 78114,
+    "population": 0,
+    "power": 0.0
+  },
+  "Sierra Leone": {
+    "area_km2": 71740,
+    "population": 8420641,
+    "power": 0.67
+  },
+  "Singapore": {
+    "area_km2": 728,
+    "population": 5637022,
+    "power": 0.06
+  },
+  "Sint Maarten": {
+    "area_km2": 34,
+    "population": 44175,
+    "power": 0.0
+  },
+  "Slovakia": {
+    "area_km2": 49035,
+    "population": 5460185,
+    "power": 0.44
+  },
+  "Slovenia": {
+    "area_km2": 20273,
+    "population": 2116792,
+    "power": 0.18
+  },
+  "Solomon Is.": {
+    "area_km2": 28896,
+    "population": 720146,
+    "power": 0.12
+  },
+  "Somalia": {
+    "area_km2": 637657,
+    "population": 17065581,
+    "power": 2.83
+  },
+  "Somaliland": {
+    "area_km2": 176120,
+    "population": 5700000,
+    "power": 0.86
+  },
+  "South Africa": {
+    "area_km2": 1219090,
+    "population": 60414495,
+    "power": 7.37
+  },
+  "South Korea": {
+    "area_km2": 100210,
+    "population": 51712619,
+    "power": 1.96
+  },
+  "Spain": {
+    "area_km2": 505990,
+    "population": 47422613,
+    "power": 4.21
+  },
+  "Sri Lanka": {
+    "area_km2": 65610,
+    "population": 21893579,
+    "power": 1.03
+  },
+  "St-Barthélemy": {
+    "area_km2": 25,
+    "population": 10289,
+    "power": 0.0
+  },
+  "St-Martin": {
+    "area_km2": 53,
+    "population": 32000,
+    "power": 0.0
+  },
+  "St. Kitts and Nevis": {
+    "area_km2": 261,
+    "population": 47195,
+    "power": 0.0
+  },
+  "St. Pierre and Miquelon": {
+    "area_km2": 242,
+    "population": 5794,
+    "power": 0.0
+  },
+  "St. Vin. and Gren.": {
+    "area_km2": 389,
+    "population": 103698,
+    "power": 0.01
+  },
+  "Sudan": {
+    "area_km2": 1861484,
+    "population": 45657202,
+    "power": 7.92
+  },
+  "Suriname": {
+    "area_km2": 163820,
+    "population": 623236,
+    "power": 0.27
+  },
+  "Sweden": {
+    "area_km2": 450295,
+    "population": 10521556,
+    "power": 1.87
+  },
+  "Switzerland": {
+    "area_km2": 41285,
+    "population": 8796669,
+    "power": 0.52
+  },
+  "Syria": {
+    "area_km2": 185180,
+    "population": 21324367,
+    "power": 1.71
+  },
+  "São Tomé and Principe": {
+    "area_km2": 964,
+    "population": 231856,
+    "power": 0.01
+  },
+  "Taiwan": {
+    "area_km2": 36193,
+    "population": 23570000,
+    "power": 0.79
+  },
+  "Tajikistan": {
+    "area_km2": 143100,
+    "population": 10143543,
+    "power": 1.03
+  },
+  "Tanzania": {
+    "area_km2": 945087,
+    "population": 63298550,
+    "power": 6.64
+  },
+  "Thailand": {
+    "area_km2": 513120,
+    "population": 71601103,
+    "power": 5.21
+  },
+  "Timor-Leste": {
+    "area_km2": 14874,
+    "population": 1341296,
+    "power": 0.12
+  },
+  "Togo": {
+    "area_km2": 56785,
+    "population": 8680837,
+    "power": 0.6
+  },
+  "Tonga": {
+    "area_km2": 747,
+    "population": 100209,
+    "power": 0.01
+  },
+  "Trinidad and Tobago": {
+    "area_km2": 5128,
+    "population": 1534937,
+    "power": 0.08
+  },
+  "Tunisia": {
+    "area_km2": 163610,
+    "population": 11818618,
+    "power": 1.19
+  },
+  "Turkey": {
+    "area_km2": 783562,
+    "population": 85341241,
+    "power": 7.02
+  },
+  "Turkmenistan": {
+    "area_km2": 488100,
+    "population": 6117924,
+    "power": 1.48
+  },
+  "Turks and Caicos Is.": {
+    "area_km2": 948,
+    "population": 38717,
+    "power": 0.01
+  },
+  "U.S. Virgin Is.": {
+    "area_km2": 347,
+    "population": 100091,
+    "power": 0.01
+  },
+  "Uganda": {
+    "area_km2": 241038,
+    "population": 47123531,
+    "power": 2.89
+  },
+  "Ukraine": {
+    "area_km2": 603550,
+    "population": 43531422,
+    "power": 4.4
+  },
+  "United Arab Emirates": {
+    "area_km2": 83600,
+    "population": 9441000,
+    "power": 0.76
+  },
+  "United Kingdom": {
+    "area_km2": 242495,
+    "population": 67736802,
+    "power": 3.48
+  },
+  "United States of America": {
+    "area_km2": 9833517,
+    "population": 335893238,
+    "power": 49.36
+  },
+  "Uruguay": {
+    "area_km2": 176215,
+    "population": 3423108,
+    "power": 0.67
+  },
+  "Uzbekistan": {
+    "area_km2": 447400,
+    "population": 35300370,
+    "power": 3.41
+  },
+  "Vanuatu": {
+    "area_km2": 12189,
+    "population": 320043,
+    "power": 0.05
+  },
+  "Vatican": {
+    "area_km2": 1,
+    "population": 800,
+    "power": 0.0
+  },
+  "Venezuela": {
+    "area_km2": 912050,
+    "population": 28301696,
+    "power": 4.36
+  },
+  "Vietnam": {
+    "area_km2": 331212,
+    "population": 98186989,
+    "power": 4.9
+  },
+  "W. Sahara": {
+    "area_km2": 266000,
+    "population": 612000,
+    "power": 0.35
+  },
+  "Wallis and Futuna Is.": {
+    "area_km2": 142,
+    "population": 11369,
+    "power": 0.0
+  },
+  "Yemen": {
+    "area_km2": 527968,
+    "population": 33697408,
+    "power": 3.62
+  },
+  "Zambia": {
+    "area_km2": 752612,
+    "population": 19473125,
+    "power": 3.29
+  },
+  "Zimbabwe": {
+    "area_km2": 390757,
+    "population": 15092171,
+    "power": 2.09
+  },
+  "Åland": {
+    "area_km2": 1580,
+    "population": 30000,
+    "power": 0.01
+  }
+}
