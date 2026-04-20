@@ -45,6 +45,7 @@ FULL_HALF   = 0.75
 
 ASSETS     = os.path.join(os.path.dirname(__file__), 'assets')
 MODELS_DIR = os.path.join(ASSETS, 'models', 'OBJ')
+SOUND_DIR  = os.path.join(ASSETS, 'sound')
 SHIP_MODEL       = os.path.join(MODELS_DIR, 'ship-large.obj')
 ENEMY_SHIP_MODEL = os.path.join(MODELS_DIR, 'ship-pirate-large.obj')
 BALL_MODEL       = os.path.join(MODELS_DIR, 'cannon-ball.obj')
@@ -151,7 +152,9 @@ ENEMY_SPAWN_DELAY = 30.0
 ENEMY_SPAWN_DIST  = 450.0
 ENEMY_PORT_SAFE_R = 150.0
 ENEMY_DMG         = 25
-ENEMY_HIT_R       = 20.0
+ENEMY_HIT_R       = 35.0
+SHIP_HIT_L        = 15.0   # half-length of ship OBB (forward/backward)
+SHIP_HIT_W        =  6.5   # half-width  of ship OBB (left/right)
 SINK_SPEED        = 2.5     # world units/second downward
 SINK_TILT_SPEED   = 22.0    # degrees/second of death roll
 SINK_DURATION     = 4.0     # seconds until removal / respawn
@@ -375,6 +378,23 @@ def _make_placeholder_ship():
     return gn
 
 
+def _make_hitbox_rect(half_l=SHIP_HIT_L, half_w=SHIP_HIT_W, color=(0.1, 0.9, 0.1, 1.0)):
+    ls = LineSegs('hitbox_rect')
+    ls.setColor(*color)
+    ls.setThickness(2.5)
+    corners = [
+        (-half_w, -half_l, 0.3),
+        ( half_w, -half_l, 0.3),
+        ( half_w,  half_l, 0.3),
+        (-half_w,  half_l, 0.3),
+        (-half_w, -half_l, 0.3),
+    ]
+    ls.moveTo(*corners[0])
+    for c in corners[1:]:
+        ls.drawTo(*c)
+    return ls.create()
+
+
 def _make_landing_ring(r=3.5, n=20, color=(0.1, 0.9, 0.1, 1.0)):
     ls = LineSegs('landing_ring')
     ls.setColor(*color)
@@ -410,6 +430,7 @@ class PirateGame(ShowBase):
         props.setFullscreen(True)
         self.win.requestProperties(props)
 
+        self._setup_audio()
         self._setup_lighting()
         self._setup_fog()
         self._setup_ocean()
@@ -469,6 +490,82 @@ class PirateGame(ShowBase):
                 props.setCursorHidden(True)
         self.win.requestProperties(props)
 
+    # ------------------------------------------------------------------
+    # Audio
+    # ------------------------------------------------------------------
+
+    def _setup_audio(self):
+        def _load(fname):
+            p = os.path.join(SOUND_DIR, fname)
+            if not os.path.exists(p):
+                return None
+            try:
+                return self.loader.loadSfx(p)
+            except Exception:
+                return None
+
+        self.snd_ocean = _load('wave_ambient.wav')
+        if self.snd_ocean:
+            self.snd_ocean.setLoop(True)
+            self.snd_ocean.setVolume(0.45)
+            self.snd_ocean.play()
+
+        self.snd_battle = _load('battle_song.wav')
+        if self.snd_battle:
+            self.snd_battle.setLoop(True)
+            self.snd_battle.setVolume(0.0)
+            self.snd_battle.play()
+
+        self.snd_seagulls = [s for s in [
+            _load('Seagull Ambient 1.wav'), _load('Seagull Ambient 2.wav'),
+            _load('Seagull Ambient 3.wav'), _load('Seagull Ambient 4.wav'),
+            _load('Seagull Ambient 7.wav'),
+        ] if s]
+        self.snd_waves = [s for s in [
+            _load('wave_short_1.flac'), _load('wave_short_2.flac'),
+        ] if s]
+        self.snd_wind = [s for s in [
+            _load('Wind_short.ogg'), _load('Wind_short2.ogg'), _load('Wind_short3.ogg'),
+        ] if s]
+
+        self.amb_seagull_t = random.uniform(5,  15)
+        self.amb_wave_t    = random.uniform(3,   8)
+        self.amb_wind_t    = random.uniform(8,  20)
+
+        self.snd_cannon_fire    = _load('cannon_fire.ogg')
+        self.snd_cannon_hit     = _load('cannon_hit.ogg')
+        self.snd_cannon_miss    = _load('cannon_miss.ogg')
+        self.snd_mine_explode   = _load('mine_explode.wav')
+        self.snd_ship_destroyed = _load('ship_destroyed.ogg')
+        self.snd_gold           = _load('grabbing_gold.mp3')
+
+    def _update_audio(self, dt):
+        self.amb_seagull_t -= dt
+        if self.amb_seagull_t <= 0 and self.snd_seagulls:
+            random.choice(self.snd_seagulls).play()
+            self.amb_seagull_t = random.uniform(8, 22)
+
+        self.amb_wave_t -= dt
+        if self.amb_wave_t <= 0 and self.snd_waves:
+            random.choice(self.snd_waves).play()
+            self.amb_wave_t = random.uniform(5, 12)
+
+        self.amb_wind_t -= dt
+        if self.amb_wind_t <= 0 and self.snd_wind:
+            random.choice(self.snd_wind).play()
+            self.amb_wind_t = random.uniform(10, 28)
+
+        if self.snd_battle:
+            if self.enemy and not self.enemy.get('dying'):
+                dx = self.ship_pos.x - self.enemy['pos'].x
+                dy = self.ship_pos.y - self.enemy['pos'].y
+                dist = math.sqrt(dx*dx + dy*dy)
+                target = max(0.0, min(0.85, (400.0 - dist) / (400.0 - 60.0)))
+            else:
+                target = 0.0
+            cur = self.snd_battle.getVolume()
+            self.snd_battle.setVolume(cur + (target - cur) * min(1.0, dt))
+
     def _setup_lighting(self):
         sun = DirectionalLight('sun')
         sun.setColor(LColor(1.0, 0.95, 0.85, 1))
@@ -508,6 +605,10 @@ class PirateGame(ShowBase):
         else:
             ph = self.bob_np.attachNewNode(_make_placeholder_ship())
             ph.setZ(-HULL_DRAFT)
+
+        self.player_hitbox_np = self.ship_np.attachNewNode(
+            _make_hitbox_rect(color=(0.2, 0.6, 1.0, 0.7)))
+        self.player_hitbox_np.hide()
 
         self.ship_np.setPos(self.ship_pos)
         self.camLens.setFov(70)
@@ -693,6 +794,7 @@ class PirateGame(ShowBase):
             return
         self.aim_circle_on  = False
         self.aim_show_timer = 0.0
+        if self.snd_cannon_fire: self.snd_cannon_fire.play()
 
         self.inventory['Cannonballs'] -= 1
         self._update_ammo_hud()
@@ -739,6 +841,7 @@ class PirateGame(ShowBase):
         self._update_enemy(dt)
         self._update_minimap()
         self._update_economy(dt)
+        self._update_audio(dt)
         return Task.cont
 
     def _update_ship(self, dt):
@@ -820,19 +923,25 @@ class PirateGame(ShowBase):
             p['pos'].y += p['vel'].y * dt
             p['pos'].z += p['vel'].z * dt
             if p['pos'].z <= -1.0:
+                hit = False
+                if self.enemy and not self.enemy.get('dying'):
+                    bx, by = p['pos'].x, p['pos'].y
+                    dx = bx - self.enemy['pos'].x
+                    dy = by - self.enemy['pos'].y
+                    _hr = math.radians(self.enemy['heading'])
+                    _lf = dx * (-math.sin(_hr)) + dy * math.cos(_hr)
+                    _lr = dx *   math.cos(_hr)  + dy * math.sin(_hr)
+                    nf = max(-SHIP_HIT_L, min(SHIP_HIT_L, _lf))
+                    nr = max(-SHIP_HIT_W, min(SHIP_HIT_W, _lr))
+                    hit = (_lf - nf)**2 + (_lr - nr)**2 < ENEMY_HIT_R * ENEMY_HIT_R
+                if hit:
+                    if self.snd_cannon_hit: self.snd_cannon_hit.play()
+                    self._hit_enemy(ITEMS['Cannonballs']['dmg'])
+                else:
+                    if self.snd_cannon_miss: self.snd_cannon_miss.play()
                 p['np'].removeNode()
                 p['ring_np'].removeNode()
                 continue
-            # Mid-flight 3D collision with enemy
-            if self.enemy:
-                dx = p['pos'].x - self.enemy['pos'].x
-                dy = p['pos'].y - self.enemy['pos'].y
-                dz = p['pos'].z - 5.0   # approximate enemy hull centre height
-                if math.sqrt(dx*dx + dy*dy + dz*dz) < ENEMY_HIT_R:
-                    self._hit_enemy(ITEMS['Cannonballs']['dmg'])
-                    p['np'].removeNode()
-                    p['ring_np'].removeNode()
-                    continue
             p['np'].setPos(p['pos'])
             alive.append(p)
         self.projectiles = alive
@@ -1126,6 +1235,7 @@ class PirateGame(ShowBase):
             dx = self.ship_pos.x - mine['pos'].x
             dy = self.ship_pos.y - mine['pos'].y
             if math.sqrt(dx*dx + dy*dy) < MINE_RADIUS:
+                if self.snd_mine_explode: self.snd_mine_explode.play()
                 mine['np'].removeNode()
                 self._take_damage(50)
                 continue
@@ -1134,6 +1244,7 @@ class PirateGame(ShowBase):
                 edx = self.enemy['pos'].x - mine['pos'].x
                 edy = self.enemy['pos'].y - mine['pos'].y
                 if math.sqrt(edx*edx + edy*edy) < MINE_RADIUS:
+                    if self.snd_mine_explode: self.snd_mine_explode.play()
                     mine['np'].removeNode()
                     self._hit_enemy(ITEMS['Sea Mines']['dmg'])
                     continue
@@ -1191,16 +1302,22 @@ class PirateGame(ShowBase):
             ph.reparentTo(bob_np)
             ph.setColor(0.55, 0.08, 0.08, 1)
 
+        hitbox_np = root_np.attachNewNode(
+            _make_hitbox_rect(color=(1.0, 0.75, 0.0, 0.7)))
+        hitbox_np.setPos(0, 0, 0)
+        hitbox_np.hide()
+
         root_np.setPos(ex, ey, 0)
 
         self.enemy = {
-            'np':       root_np,
-            'bob':      bob_np,
-            'pos':      LVector3f(ex, ey, 0),
-            'heading':  random.uniform(0, 360),
-            'speed':    0.0,
-            'hp':       ENEMY_HP,
-            'shoot_cd': ENEMY_SHOOT_CD,
+            'np':        root_np,
+            'bob':       bob_np,
+            'hitbox_np': hitbox_np,
+            'pos':       LVector3f(ex, ey, 0),
+            'heading':   random.uniform(0, 360),
+            'speed':     0.0,
+            'hp':        ENEMY_HP,
+            'shoot_cd':  ENEMY_SHOOT_CD,
         }
 
     def _update_enemy(self, dt):
@@ -1344,6 +1461,7 @@ class PirateGame(ShowBase):
         t_f = land_d / CANNON_SPEED
         vz  = (-CANNON_Z - 0.5 * CANNON_GRAVITY * t_f * t_f) / t_f
 
+        if self.snd_cannon_fire: self.snd_cannon_fire.play()
         ball_np = self.render.attachNewNode('enemy_ball')
         if os.path.exists(BALL_MODEL):
             bm = self.loader.loadModel(BALL_MODEL)
@@ -1370,8 +1488,16 @@ class PirateGame(ShowBase):
             if p['pos'].z <= -1.0:
                 dx = p['pos'].x - self.ship_pos.x
                 dy = p['pos'].y - self.ship_pos.y
-                if math.sqrt(dx*dx + dy*dy) < ENEMY_HIT_R:
+                _hr = math.radians(self.ship_heading)
+                _lf = dx * (-math.sin(_hr)) + dy * math.cos(_hr)
+                _lr = dx *   math.cos(_hr)  + dy * math.sin(_hr)
+                nf = max(-SHIP_HIT_L, min(SHIP_HIT_L, _lf))
+                nr = max(-SHIP_HIT_W, min(SHIP_HIT_W, _lr))
+                if (_lf - nf)**2 + (_lr - nr)**2 < ENEMY_HIT_R * ENEMY_HIT_R:
+                    if self.snd_cannon_hit: self.snd_cannon_hit.play()
                     self._take_damage(ENEMY_DMG)
+                else:
+                    if self.snd_cannon_miss: self.snd_cannon_miss.play()
                 p['np'].removeNode()
             else:
                 alive.append(p)
@@ -1385,11 +1511,13 @@ class PirateGame(ShowBase):
             self._kill_enemy()
 
     def _kill_enemy(self):
+        if self.snd_ship_destroyed: self.snd_ship_destroyed.play()
         for p in self.enemy_projectiles:
             p['np'].removeNode()
         self.enemy_projectiles = []
         self.enemy_hpbar_bg.hide()
         self.enemy_hpbar_fill.hide()
+
         self.enemy['dying']    = True
         self.enemy['die_timer'] = 0.0
 
@@ -1422,6 +1550,7 @@ class PirateGame(ShowBase):
             self._die()
 
     def _die(self):
+        if self.snd_ship_destroyed: self.snd_ship_destroyed.play()
         if self.docked:
             self._undock()
         self.player_dying     = True
@@ -1490,6 +1619,8 @@ class PirateGame(ShowBase):
         g = min(1.0, 2.0 * pct)
         self.hp_bar['frameColor'] = (r, g, 0.05, 0.92)
         self.hp_label.setText(str(self.health))
+        if getattr(self, 'inv_open', False):
+            self._refresh_inventory()
 
     # ------------------------------------------------------------------
 
@@ -1778,6 +1909,7 @@ class PirateGame(ShowBase):
         if self.gold >= price and can_fit:
             self.gold -= price
             self.inventory[item] += 1
+            if self.snd_gold: self.snd_gold.play()
             self._update_ammo_hud()
             self._refresh_trade_ui()
 
@@ -1786,6 +1918,7 @@ class PirateGame(ShowBase):
             return
         self.gold += _port_buy_price(item, PORTS[self.active_port_idx])
         self.inventory[item] -= 1
+        if self.snd_gold: self.snd_gold.play()
         self._update_ammo_hud()
         self._refresh_trade_ui()
 
@@ -1911,8 +2044,9 @@ class PirateGame(ShowBase):
             info = ITEMS[item]
             if info['cat'] == 'Repairs':
                 slot['btn']['text']       = 'Use'
-                slot['btn']['frameColor'] = (0.65, 0.35, 0.08, 1) if qty > 0 else (0.25, 0.18, 0.08, 1)
-                slot['btn']['command']    = self._use_item if qty > 0 else None
+                can_use = qty > 0 and self.health < 100
+                slot['btn']['frameColor'] = (0.65, 0.35, 0.08, 1) if can_use else (0.25, 0.18, 0.08, 1)
+                slot['btn']['command']    = self._use_item if can_use else None
                 slot['btn']['extraArgs']  = [item]
                 slot['btn'].bind(DGG.ENTER, self._show_tooltip, extraArgs=[item])
                 slot['btn'].bind(DGG.EXIT,  self._hide_tooltip)
