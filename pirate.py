@@ -1,4 +1,4 @@
-import math, os, random
+import math, os, random, sys
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
 from direct.gui.DirectGui import DirectFrame, DirectButton, DGG
@@ -43,7 +43,11 @@ MINI_RANGE  =  600.0   # world units visible in the minimap circle
 MINI_HALF   = 0.16
 FULL_HALF   = 0.75
 
-ASSETS     = os.path.join(os.path.dirname(__file__), 'assets')
+if getattr(sys, 'frozen', False):
+    _BASE = os.path.dirname(sys.executable)
+else:
+    _BASE = os.path.dirname(os.path.abspath(__file__))
+ASSETS     = os.path.join(_BASE, 'assets')
 MODELS_DIR = os.path.join(ASSETS, 'models', 'OBJ')
 SOUND_DIR  = os.path.join(ASSETS, 'sound')
 SHIP_MODEL       = os.path.join(MODELS_DIR, 'ship-large.obj')
