@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: dead-reckoning-linux.zip
+          - os: windows-latest
+            artifact: dead-reckoning-windows.zip
+          - os: macos-latest
+            artifact: dead-reckoning-macos.zip
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install build dependencies
+        run: pip install panda3d setuptools
+
+      - name: Build
+        run: python setup.py bdist_apps
+
+      - name: Package (Linux / macOS)
+        if: runner.os != 'Windows'
+        run: cd build && zip -r ../${{ matrix.artifact }} .
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path build\* -DestinationPath ${{ matrix.artifact }}
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.artifact }}
