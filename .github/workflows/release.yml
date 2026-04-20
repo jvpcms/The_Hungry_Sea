@@ -16,10 +16,13 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact: the-hungry-sea-linux.zip
+            platform_grep: manylinux
           - os: windows-latest
             artifact: the-hungry-sea-windows.zip
+            platform_grep: win
           - os: macos-latest
             artifact: the-hungry-sea-macos.zip
+            platform_grep: macos
 
     runs-on: ${{ matrix.os }}
 
@@ -39,7 +42,7 @@ jobs:
       - name: Package (Linux / macOS)
         if: runner.os != 'Windows'
         run: |
-          PLATFORM_DIR=$(ls build | grep -v __whl_cache__ | head -1)
+          PLATFORM_DIR=$(ls build | grep "${{ matrix.platform_grep }}" | head -1)
           cd build/$PLATFORM_DIR
           zip -r ../../${{ matrix.artifact }} .
 
@@ -47,7 +50,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $dir = Get-ChildItem build | Where-Object Name -ne '__whl_cache__' | Select-Object -First 1 -ExpandProperty Name
+          $dir = Get-ChildItem build | Where-Object { $_.Name -like '*${{ matrix.platform_grep }}*' } | Select-Object -First 1 -ExpandProperty Name
           Compress-Archive -Path "build\$dir\*" -DestinationPath "${{ matrix.artifact }}"
 
       - name: Upload to release
