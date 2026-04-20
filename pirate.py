@@ -48,11 +48,16 @@ if getattr(sys, 'frozen', False):
 else:
     _BASE = os.path.dirname(os.path.abspath(__file__))
 ASSETS     = os.path.join(_BASE, 'assets')
-MODELS_DIR = os.path.join(ASSETS, 'models', 'OBJ')
 SOUND_DIR  = os.path.join(ASSETS, 'sound')
-SHIP_MODEL       = os.path.join(MODELS_DIR, 'ship-large.obj')
-ENEMY_SHIP_MODEL = os.path.join(MODELS_DIR, 'ship-pirate-large.obj')
-BALL_MODEL       = os.path.join(MODELS_DIR, 'cannon-ball.obj')
+
+def _model(name):
+    bam = os.path.join(ASSETS, 'models', 'BAM', name + '.bam')
+    obj = os.path.join(ASSETS, 'models', 'OBJ', name + '.obj')
+    return bam if os.path.exists(bam) else obj
+
+SHIP_MODEL       = _model('ship-large')
+ENEMY_SHIP_MODEL = _model('ship-pirate-large')
+BALL_MODEL       = _model('cannon-ball')
 
 PLAYER_GOLD_START = 500
 PLAYER_AMMO_START = 20
@@ -622,7 +627,7 @@ class PirateGame(ShowBase):
             np = self.render.attachNewNode(f'island_{port["name"]}')
             np.setPos(port['pos'])
             for fname, ox, oy, oz, h, scale in pieces:
-                p = os.path.join(MODELS_DIR, fname)
+                p = _model(fname.replace('.obj', ''))
                 if not os.path.exists(p):
                     continue
                 m = self.loader.loadModel(p)
@@ -1210,7 +1215,7 @@ class PirateGame(ShowBase):
 
         mine_np  = self.render.attachNewNode('mine_root')
         mine_bob = mine_np.attachNewNode('mine_bob')
-        p = os.path.join(MODELS_DIR, 'barrel.obj')
+        p = _model('barrel')
         if os.path.exists(p):
             m = self.loader.loadModel(p)
             m.reparentTo(mine_bob)

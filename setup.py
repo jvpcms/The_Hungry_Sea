@@ -10,7 +10,7 @@ setup(
             'include_patterns': [
                 'assets/**/*',
             ],
-            'plugins': ['pandagl', 'p3openal_audio', 'p3assimp', 'p3ffmpeg'],
+            'plugins': ['pandagl', 'p3openal_audio', 'p3ffmpeg'],
             'log_filename': '$USER_APPDATA/TheHungrySea/output.log',
             'log_append': False,
         }
