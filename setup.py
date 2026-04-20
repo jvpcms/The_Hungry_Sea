@@ -1,17 +1,17 @@
 from setuptools import setup
 
 setup(
-    name='dead-reckoning',
+    name='the-hungry-sea',
     options={
         'build_apps': {
             'gui_apps': {
-                'dead-reckoning': 'pirate.py',
+                'the-hungry-sea': 'pirate.py',
             },
             'include_patterns': [
                 'assets/**/*',
             ],
             'plugins': ['pandagl', 'p3openal_audio'],
-            'log_filename': '$USER_APPDATA/DeadReckoning/output.log',
+            'log_filename': '$USER_APPDATA/TheHungrySea/output.log',
             'log_append': False,
         }
     }

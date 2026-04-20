@@ -15,11 +15,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            artifact: dead-reckoning-linux.zip
+            artifact: the-hungry-sea-linux.zip
           - os: windows-latest
-            artifact: dead-reckoning-windows.zip
+            artifact: the-hungry-sea-windows.zip
           - os: macos-latest
-            artifact: dead-reckoning-macos.zip
+            artifact: the-hungry-sea-macos.zip
 
     runs-on: ${{ matrix.os }}
 
@@ -38,12 +38,17 @@ jobs:
 
       - name: Package (Linux / macOS)
         if: runner.os != 'Windows'
-        run: cd build && zip -r ../${{ matrix.artifact }} .
+        run: |
+          PLATFORM_DIR=$(ls build | grep -v __whl_cache__ | head -1)
+          cd build/$PLATFORM_DIR
+          zip -r ../../${{ matrix.artifact }} .
 
       - name: Package (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: Compress-Archive -Path build\* -DestinationPath ${{ matrix.artifact }}
+        run: |
+          $dir = Get-ChildItem build | Where-Object Name -ne '__whl_cache__' | Select-Object -First 1 -ExpandProperty Name
+          Compress-Archive -Path "build\$dir\*" -DestinationPath "${{ matrix.artifact }}"
 
       - name: Upload to release
         uses: softprops/action-gh-release@v2
