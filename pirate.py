@@ -541,7 +541,7 @@ class PirateGame(ShowBase):
         self.snd_cannon_miss    = _load('cannon_miss.ogg')
         self.snd_mine_explode   = _load('mine_explode.wav')
         self.snd_ship_destroyed = _load('ship_destroyed.ogg')
-        self.snd_gold           = _load('grabbing_gold.mp3')
+        self.snd_gold           = _load('grabbing_gold.ogg') or _load('grabbing_gold.mp3')
 
     def _update_audio(self, dt):
         self.amb_seagull_t -= dt
