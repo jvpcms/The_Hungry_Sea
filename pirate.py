@@ -1,4 +1,4 @@
-import math, os
+import math, os, random
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
 from direct.gui.DirectGui import DirectFrame, DirectButton, DGG
@@ -8,16 +8,16 @@ from panda3d.core import (
     GeomTriangles, Geom, GeomNode,
     LVector3f, LColor,
     AmbientLight, DirectionalLight,
-    LineSegs, WindowProperties, TextNode, Shader, Fog,
+    LineSegs, WindowProperties, TextNode, Shader, Fog, LPoint2f,
 )
 
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 
-MAX_SPEED    = 55.0
-TURN_SPEED   = 80.0
-ACCELERATION = 50.0
+MAX_SPEED    = 32.0
+TURN_SPEED   = 55.0
+ACCELERATION = 28.0
 DRAG         = 0.7
 CAM_DIST      = 110.0
 CAM_PITCH_MIN =   5.0
@@ -34,7 +34,7 @@ HULL_DRAFT      = 4.0
 CANNON_SPEED     = 50.0
 CANNON_MAX_RANGE = 130.0
 CANNON_MIN_RANGE = 15.0
-CANNON_CHARGE_T  = 2.0
+CANNON_AIM_RATE  = 70.0    # units/second while holding aim button
 CANNON_GRAVITY   = -28.0
 CANNON_Z         = 3.0
 
@@ -45,8 +45,9 @@ FULL_HALF   = 0.75
 
 ASSETS     = os.path.join(os.path.dirname(__file__), 'assets')
 MODELS_DIR = os.path.join(ASSETS, 'models', 'OBJ')
-SHIP_MODEL = os.path.join(MODELS_DIR, 'ship-large.obj')
-BALL_MODEL = os.path.join(MODELS_DIR, 'cannon-ball.obj')
+SHIP_MODEL       = os.path.join(MODELS_DIR, 'ship-large.obj')
+ENEMY_SHIP_MODEL = os.path.join(MODELS_DIR, 'ship-pirate-large.obj')
+BALL_MODEL       = os.path.join(MODELS_DIR, 'cannon-ball.obj')
 
 PLAYER_GOLD_START = 500
 PLAYER_AMMO_START = 20
@@ -139,6 +140,21 @@ _IC_BTN  =  0.55   # Use/info button centre
 # Mine / health HUD constants
 MINE_RADIUS      = 6.0
 MINE_DROP_OFFSET = 10.0   # drop this far behind the stern (> MINE_RADIUS)
+
+ENEMY_HP          = 100
+ENEMY_SPEED       = 35.0
+ENEMY_TURN_SPEED  = 50.0
+ENEMY_MIN_DIST    = 140.0
+ENEMY_SHOOT_RANGE = 150.0
+ENEMY_SHOOT_CD    = 5.0
+ENEMY_SPAWN_DELAY = 30.0
+ENEMY_SPAWN_DIST  = 450.0
+ENEMY_PORT_SAFE_R = 150.0
+ENEMY_DMG         = 25
+ENEMY_HIT_R       = 20.0
+SINK_SPEED        = 2.5     # world units/second downward
+SINK_TILT_SPEED   = 22.0    # degrees/second of death roll
+SINK_DURATION     = 4.0     # seconds until removal / respawn
 _HP_BAR_W    = 0.36
 _HP_BAR_H    = 0.040
 _HP_BAR_X    = -1.50
@@ -359,9 +375,9 @@ def _make_placeholder_ship():
     return gn
 
 
-def _make_landing_ring(r=3.5, n=20):
+def _make_landing_ring(r=3.5, n=20, color=(0.1, 0.9, 0.1, 1.0)):
     ls = LineSegs('landing_ring')
-    ls.setColor(1.0, 0.35, 0.05, 1.0)
+    ls.setColor(*color)
     ls.setThickness(2.5)
     pts = [(r * math.cos(2*math.pi*i/n), r * math.sin(2*math.pi*i/n), 0.3)
            for i in range(n + 1)]
@@ -404,6 +420,7 @@ class PirateGame(ShowBase):
         self._setup_maps()
         self._setup_economy()
         self._setup_hud()
+        self._setup_enemy()
         self._setup_tooltip()
         self._setup_inventory()
 
@@ -634,34 +651,53 @@ class PirateGame(ShowBase):
     def _key_up(self,   key): self.keys[key] = False
 
     def _setup_aim(self):
-        self.charging    = False
-        self.charge_time = 0.0
-        self.projectiles = []
+        self.aim_dist       = (CANNON_MIN_RANGE + CANNON_MAX_RANGE) * 0.5
+        self.mouse1_held    = False
+        self.mouse3_held    = False
+        self.aim_circle_on  = False
+        self.aim_show_timer = 0.0
+        self.projectiles    = []
 
-        self.target_np = self.render.attachNewNode(_make_landing_ring())
+        self.target_np = self.render.attachNewNode(
+            _make_landing_ring(r=ENEMY_HIT_R))
         self.target_np.hide()
 
-        self.accept('mouse1',    self._charge_start)
-        self.accept('mouse1-up', self._fire)
+        self.enemy_target_np = self.render.attachNewNode(
+            _make_landing_ring(r=ENEMY_HIT_R, color=(0.9, 0.1, 0.1, 1.0)))
+        self.enemy_target_np.hide()
 
-    def _charge_start(self):
-        if self.docked:
-            return
-        self.charging    = True
-        self.charge_time = 0.0
+        self.accept('mouse1',    self._mouse1_down)
+        self.accept('mouse1-up', self._mouse1_up)
+        self.accept('mouse3',    self._mouse3_down)
+        self.accept('mouse3-up', self._mouse3_up)
+        self.accept('space',     self._fire)
+
+    def _mouse1_down(self):
+        self.mouse1_held   = True
+        self.aim_circle_on = True
+        self.aim_show_timer = 5.0
+
+    def _mouse1_up(self):   self.mouse1_held = False
+
+    def _mouse3_down(self):
+        self.mouse3_held   = True
+        self.aim_circle_on = True
+        self.aim_show_timer = 5.0
+
+    def _mouse3_up(self):   self.mouse3_held = False
 
     def _fire(self):
-        if not self.charging:
+        if self.docked:
             return
-        self.charging = False
         if self.inventory.get('Cannonballs', 0) <= 0:
             return
+        self.aim_circle_on  = False
+        self.aim_show_timer = 0.0
 
         self.inventory['Cannonballs'] -= 1
         self._update_ammo_hud()
 
-        frac   = self.charge_time / CANNON_CHARGE_T
-        land_d = CANNON_MIN_RANGE + frac * (CANNON_MAX_RANGE - CANNON_MIN_RANGE)
+        land_d = self.aim_dist
         yr     = math.radians(self.cam_yaw)
         fdx, fdy = -math.sin(yr), -math.cos(yr)
 
@@ -675,10 +711,16 @@ class PirateGame(ShowBase):
             m.setScale(5)
             m.setColor(0.15, 0.15, 0.15, 1)
         ball_np.setPos(self.ship_pos.x, self.ship_pos.y, CANNON_Z)
+        lx = self.ship_pos.x + fdx * land_d
+        ly = self.ship_pos.y + fdy * land_d
+        ring_np = self.render.attachNewNode(_make_landing_ring(r=ENEMY_HIT_R))
+        ring_np.setPos(lx, ly, 0)
         self.projectiles.append({
-            'np':  ball_np,
-            'pos': LVector3f(self.ship_pos.x, self.ship_pos.y, CANNON_Z),
-            'vel': LVector3f(fdx * CANNON_SPEED, fdy * CANNON_SPEED, vz),
+            'np':       ball_np,
+            'ring_np':  ring_np,
+            'pos':      LVector3f(self.ship_pos.x, self.ship_pos.y, CANNON_Z),
+            'vel':      LVector3f(fdx * CANNON_SPEED, fdy * CANNON_SPEED, vz),
+            'land_pos': LVector3f(lx, ly, 0),
         })
 
     # ------------------------------------------------------------------
@@ -694,11 +736,15 @@ class PirateGame(ShowBase):
         self._update_aim(dt)
         self._update_projectiles(dt)
         self._update_mines(dt)
+        self._update_enemy(dt)
         self._update_minimap()
         self._update_economy(dt)
         return Task.cont
 
     def _update_ship(self, dt):
+        if self.player_dying:
+            self._update_player_dying(dt)
+            return
         if self.docked:
             return
         if self.keys['w']:
@@ -739,17 +785,27 @@ class PirateGame(ShowBase):
         self.bob_np.setHpr(0, pitch, roll)
 
     def _update_aim(self, dt):
+        if not self.docked:
+            if self.mouse1_held:
+                self.aim_dist = min(self.aim_dist + CANNON_AIM_RATE * dt, CANNON_MAX_RANGE)
+            if self.mouse3_held:
+                self.aim_dist = max(self.aim_dist - CANNON_AIM_RATE * dt, CANNON_MIN_RANGE)
+
         yr  = math.radians(self.cam_yaw)
         fdx = -math.sin(yr)
         fdy = -math.cos(yr)
 
-        if self.charging:
-            self.charge_time = min(self.charge_time + dt, CANNON_CHARGE_T)
-            frac   = self.charge_time / CANNON_CHARGE_T
-            land_d = CANNON_MIN_RANGE + frac * (CANNON_MAX_RANGE - CANNON_MIN_RANGE)
+        if self.mouse1_held or self.mouse3_held:
+            self.aim_show_timer = 5.0
+        elif self.aim_circle_on:
+            self.aim_show_timer -= dt
+            if self.aim_show_timer <= 0:
+                self.aim_circle_on = False
+
+        if not self.docked and self.aim_circle_on:
             self.target_np.setPos(
-                self.ship_pos.x + fdx * land_d,
-                self.ship_pos.y + fdy * land_d,
+                self.ship_pos.x + fdx * self.aim_dist,
+                self.ship_pos.y + fdy * self.aim_dist,
                 0,
             )
             self.target_np.show()
@@ -763,11 +819,22 @@ class PirateGame(ShowBase):
             p['pos'].x += p['vel'].x * dt
             p['pos'].y += p['vel'].y * dt
             p['pos'].z += p['vel'].z * dt
-            if p['pos'].z > -1.0:
-                p['np'].setPos(p['pos'])
-                alive.append(p)
-            else:
+            if p['pos'].z <= -1.0:
                 p['np'].removeNode()
+                p['ring_np'].removeNode()
+                continue
+            # Mid-flight 3D collision with enemy
+            if self.enemy:
+                dx = p['pos'].x - self.enemy['pos'].x
+                dy = p['pos'].y - self.enemy['pos'].y
+                dz = p['pos'].z - 5.0   # approximate enemy hull centre height
+                if math.sqrt(dx*dx + dy*dy + dz*dz) < ENEMY_HIT_R:
+                    self._hit_enemy(ITEMS['Cannonballs']['dmg'])
+                    p['np'].removeNode()
+                    p['ring_np'].removeNode()
+                    continue
+            p['np'].setPos(p['pos'])
+            alive.append(p)
         self.projectiles = alive
 
     def _setup_maps(self):
@@ -819,6 +886,13 @@ class PirateGame(ShowBase):
                               frameSize=(-0.009, 0.009, -0.009, 0.009),
                               pos=(MCX, 0, MCZ))
             self.mini_port_dots.append(dot)
+
+        # Enemy dot — repositioned each frame, hidden when no enemy
+        self.mini_enemy_dot = DirectFrame(
+            parent=a2d, frameColor=(0.95, 0.15, 0.15, 1),
+            frameSize=(-0.010, 0.010, -0.010, 0.010),
+            pos=(MCX, 0, MCZ))
+        self.mini_enemy_dot.hide()
 
         # Player arrow — always at centre
         als = LineSegs()
@@ -923,6 +997,24 @@ class PirateGame(ShowBase):
                 dot['frameColor'] = (0.45, 0.88, 0.32, 0.7)
             dot.setPos(sx, 0, sz)
 
+        # Enemy dot
+        if self.enemy:
+            edx = self.enemy['pos'].x - self.ship_pos.x
+            edy = self.enemy['pos'].y - self.ship_pos.y
+            edist = math.sqrt(edx*edx + edy*edy) or 0.001
+            erx = -cyr * edx + syr * edy
+            erz = -syr * edx - cyr * edy
+            if edist / MINI_RANGE <= 1.0:
+                self.mini_enemy_dot.setPos(MCX + erx / MINI_RANGE * R, 0, MCZ + erz / MINI_RANGE * R)
+                self.mini_enemy_dot['frameSize'] = (-0.010, 0.010, -0.010, 0.010)
+            else:
+                erdist = math.sqrt(erx*erx + erz*erz) or 0.001
+                self.mini_enemy_dot.setPos(MCX + (erx / erdist) * R * 0.93, 0, MCZ + (erz / erdist) * R * 0.93)
+                self.mini_enemy_dot['frameSize'] = (-0.007, 0.007, -0.007, 0.007)
+            self.mini_enemy_dot.show()
+        else:
+            self.mini_enemy_dot.hide()
+
         if not self.fullmap_np.isHidden():
             fs = FULL_HALF / WORLD_RANGE
             fx = max(-FULL_HALF + 0.025, min(FULL_HALF - 0.025, self.ship_pos.x * fs))
@@ -962,7 +1054,9 @@ class PirateGame(ShowBase):
     # ------------------------------------------------------------------
 
     def _setup_hud(self):
-        self.health = 100
+        self.health           = 100
+        self.player_dying     = False
+        self.player_die_timer = 0.0
         self.mines  = []
 
         # HP label to the left of the bar
@@ -1028,17 +1122,300 @@ class PirateGame(ShowBase):
             pitch = PITCH_AMPLITUDE * 0.55 * math.sin((t + ph) * (2*math.pi / PITCH_PERIOD))
             roll  = ROLL_AMPLITUDE  * 0.55 * math.sin((t + ph * 1.37) * (2*math.pi / ROLL_PERIOD))
             mine['bob'].setHpr(0, pitch, roll)
-            # Collision
+            # Player collision
             dx = self.ship_pos.x - mine['pos'].x
             dy = self.ship_pos.y - mine['pos'].y
             if math.sqrt(dx*dx + dy*dy) < MINE_RADIUS:
                 mine['np'].removeNode()
                 self._take_damage(50)
-            else:
-                alive.append(mine)
+                continue
+            # Enemy collision
+            if self.enemy:
+                edx = self.enemy['pos'].x - mine['pos'].x
+                edy = self.enemy['pos'].y - mine['pos'].y
+                if math.sqrt(edx*edx + edy*edy) < MINE_RADIUS:
+                    mine['np'].removeNode()
+                    self._hit_enemy(ITEMS['Sea Mines']['dmg'])
+                    continue
+            alive.append(mine)
         self.mines = alive
 
+    # ------------------------------------------------------------------
+    # Enemy
+    # ------------------------------------------------------------------
+
+    def _setup_enemy(self):
+        self.enemy             = None
+        self.enemy_spawn_timer = ENEMY_SPAWN_DELAY
+        self.enemy_projectiles = []
+
+        _bw, _bh = 0.11, 0.014
+        self._ehp_bw = _bw
+        self._ehp_bh = _bh
+        self.enemy_hpbar_bg = DirectFrame(
+            parent=self.aspect2d,
+            frameSize=(-_bw, _bw, -_bh, _bh),
+            frameColor=(0.25, 0.02, 0.02, 0.93))
+        self.enemy_hpbar_fill = DirectFrame(
+            parent=self.aspect2d,
+            frameSize=(-_bw, _bw, -_bh, _bh),
+            frameColor=(0.1, 0.9, 0.1, 0.93))
+        self.enemy_hpbar_bg.hide()
+        self.enemy_hpbar_fill.hide()
+
+    def _near_any_port(self):
+        for port in PORTS:
+            dx = self.ship_pos.x - port['pos'].x
+            dy = self.ship_pos.y - port['pos'].y
+            if math.sqrt(dx*dx + dy*dy) < ENEMY_PORT_SAFE_R:
+                return True
+        return False
+
+    def _spawn_enemy(self):
+        angle = random.uniform(0, 2 * math.pi)
+        ex = self.ship_pos.x + math.cos(angle) * ENEMY_SPAWN_DIST
+        ey = self.ship_pos.y + math.sin(angle) * ENEMY_SPAWN_DIST
+
+        root_np = self.render.attachNewNode('enemy_root')
+        bob_np  = root_np.attachNewNode('enemy_bob')
+
+        model_path = ENEMY_SHIP_MODEL if os.path.exists(ENEMY_SHIP_MODEL) else SHIP_MODEL
+        if os.path.exists(model_path):
+            m = self.loader.loadModel(model_path)
+            m.reparentTo(bob_np)
+            m.setHpr(90, 90, 90)
+            m.setScale(3.0)
+            m.setZ(-HULL_DRAFT)
+        else:
+            ph = self.render.attachNewNode(_make_placeholder_ship())
+            ph.reparentTo(bob_np)
+            ph.setColor(0.55, 0.08, 0.08, 1)
+
+        root_np.setPos(ex, ey, 0)
+
+        self.enemy = {
+            'np':       root_np,
+            'bob':      bob_np,
+            'pos':      LVector3f(ex, ey, 0),
+            'heading':  random.uniform(0, 360),
+            'speed':    0.0,
+            'hp':       ENEMY_HP,
+            'shoot_cd': ENEMY_SHOOT_CD,
+        }
+
+    def _update_enemy(self, dt):
+        if self.enemy is None:
+            self.enemy_spawn_timer -= dt
+            if self.enemy_spawn_timer <= 0 and not self._near_any_port():
+                self._spawn_enemy()
+            return
+
+        e = self.enemy
+        if e.get('dying'):
+            self._update_dying_enemy(dt)
+            return
+
+        dx = self.ship_pos.x - e['pos'].x
+        dy = self.ship_pos.y - e['pos'].y
+        dist = math.sqrt(dx*dx + dy*dy) or 0.001
+
+        target_h = math.degrees(math.atan2(-dx, dy))
+        diff = (target_h - e['heading'] + 180) % 360 - 180
+
+        if dist > ENEMY_MIN_DIST:
+            e['heading'] += max(-ENEMY_TURN_SPEED * dt, min(ENEMY_TURN_SPEED * dt, diff))
+            e['speed'] = min(e['speed'] + 30.0 * dt, ENEMY_SPEED)
+        else:
+            perp_diff = 90.0
+            e['heading'] += max(-ENEMY_TURN_SPEED * dt, min(ENEMY_TURN_SPEED * dt, perp_diff))
+            e['speed'] = min(e['speed'] + 10.0 * dt, ENEMY_SPEED * 0.6)
+
+        e['speed'] -= 0.7 * e['speed'] * dt
+
+        rad = math.radians(e['heading'])
+        e['pos'].x -= math.sin(rad) * e['speed'] * dt
+        e['pos'].y += math.cos(rad) * e['speed'] * dt
+        e['np'].setPos(e['pos'])
+        e['np'].setH(e['heading'])
+
+        t = globalClock.getFrameTime()
+        pitch = PITCH_AMPLITUDE * math.sin(t * (2 * math.pi / PITCH_PERIOD) + 1.3)
+        roll  = ROLL_AMPLITUDE  * math.sin(t * (2 * math.pi / ROLL_PERIOD)  + 0.7)
+        e['bob'].setHpr(0, pitch, roll)
+
+        e['shoot_cd'] -= dt
+        if e['shoot_cd'] <= 0 and dist < ENEMY_SHOOT_RANGE:
+            self._enemy_fire()
+            e['shoot_cd'] = ENEMY_SHOOT_CD
+
+        # Enemy aim ring — tracks the last in-flight enemy shot
+        if self.enemy_projectiles:
+            self.enemy_target_np.setPos(self.enemy_projectiles[-1]['land_pos'])
+            self.enemy_target_np.show()
+        else:
+            self.enemy_target_np.hide()
+
+        self._update_enemy_projectiles(dt)
+        self._update_enemy_hpbar()
+
+    def _update_enemy_hpbar(self):
+        if not self.enemy or self.enemy.get('dying'):
+            self.enemy_hpbar_bg.hide()
+            self.enemy_hpbar_fill.hide()
+            return
+        e = self.enemy
+        # Project world position above enemy to screen
+        label_pos = LVector3f(e['pos'].x, e['pos'].y, 22)
+        cam_rel   = self.camera.getRelativePoint(self.render, label_pos)
+        p2        = LPoint2f()
+        if not self.camLens.project(cam_rel, p2):
+            self.enemy_hpbar_bg.hide()
+            self.enemy_hpbar_fill.hide()
+            return
+        ar = self.getAspectRatio()
+        sx = p2[0] * ar
+        sz = p2[1]
+        # Scale bar by inverse camera distance so it matches perceived ship size
+        cam_pos     = self.camera.getPos(self.render)
+        dist_to_cam = (cam_pos - LVector3f(e['pos'].x, e['pos'].y, 10)).length()
+        bar_scale   = max(0.25, min(1.4, 55.0 / max(dist_to_cam, 1.0)))
+        bw = self._ehp_bw * bar_scale
+        bh = self._ehp_bh * bar_scale
+        pct = max(0.0, e['hp'] / ENEMY_HP)
+        r   = min(1.0, 2.0 * (1.0 - pct))
+        g   = min(1.0, 2.0 * pct)
+        self.enemy_hpbar_bg.setPos(sx, 0, sz)
+        self.enemy_hpbar_bg['frameSize'] = (-bw, bw, -bh, bh)
+        self.enemy_hpbar_bg.show()
+        fill_hw = bw * pct
+        self.enemy_hpbar_fill.setPos(sx - bw + fill_hw, 0, sz)
+        self.enemy_hpbar_fill['frameSize']  = (-fill_hw, fill_hw, -bh, bh)
+        self.enemy_hpbar_fill['frameColor'] = (r, g, 0.05, 0.93)
+        if pct > 0:
+            self.enemy_hpbar_fill.show()
+        else:
+            self.enemy_hpbar_fill.hide()
+
+    def _enemy_fire(self):
+        e  = self.enemy
+        px, py = self.ship_pos.x, self.ship_pos.y
+        ex, ey = e['pos'].x, e['pos'].y
+
+        # Player velocity vector
+        pr  = math.radians(self.ship_heading)
+        pvx = -math.sin(pr) * self.ship_speed
+        pvy =  math.cos(pr) * self.ship_speed
+
+        dx0 = px - ex
+        dy0 = py - ey
+
+        # Solve |(dx0+pvx*t, dy0+pvy*t)| = CANNON_SPEED*t  →  quadratic in t
+        a = pvx*pvx + pvy*pvy - CANNON_SPEED*CANNON_SPEED
+        b = 2.0 * (dx0*pvx + dy0*pvy)
+        c = dx0*dx0 + dy0*dy0
+        disc = b*b - 4.0*a*c
+
+        t_intercept = None
+        if disc >= 0:
+            sq = math.sqrt(disc)
+            for ti in ((-b + sq) / (2*a), (-b - sq) / (2*a)):
+                if ti > 0 and (t_intercept is None or ti < t_intercept):
+                    t_intercept = ti
+
+        if t_intercept is not None:
+            aim_x = px + pvx * t_intercept
+            aim_y = py + pvy * t_intercept
+            aim_dist = math.sqrt((aim_x - ex)**2 + (aim_y - ey)**2)
+            if aim_dist > CANNON_MAX_RANGE * 0.9:
+                aim_x, aim_y = px, py
+                aim_dist = math.sqrt(dx0*dx0 + dy0*dy0)
+        else:
+            aim_x, aim_y = px, py
+            aim_dist = math.sqrt(dx0*dx0 + dy0*dy0)
+
+        land_d = min(aim_dist, CANNON_MAX_RANGE * 0.9)
+        fdx = (aim_x - ex) / max(aim_dist, 0.001)
+        fdy = (aim_y - ey) / max(aim_dist, 0.001)
+
+        spread = math.radians(random.uniform(-5, 5))
+        cs, ss = math.cos(spread), math.sin(spread)
+        fdx, fdy = fdx*cs - fdy*ss, fdx*ss + fdy*cs
+
+        t_f = land_d / CANNON_SPEED
+        vz  = (-CANNON_Z - 0.5 * CANNON_GRAVITY * t_f * t_f) / t_f
+
+        ball_np = self.render.attachNewNode('enemy_ball')
+        if os.path.exists(BALL_MODEL):
+            bm = self.loader.loadModel(BALL_MODEL)
+            bm.reparentTo(ball_np)
+            bm.setScale(5)
+            bm.setColor(0.7, 0.1, 0.1, 1)
+        ball_np.setPos(ex, ey, CANNON_Z)
+
+        self.enemy_projectiles.append({
+            'np':       ball_np,
+            'pos':      LVector3f(ex, ey, CANNON_Z),
+            'vel':      LVector3f(fdx * CANNON_SPEED, fdy * CANNON_SPEED, vz),
+            'land_pos': LVector3f(ex + fdx * land_d, ey + fdy * land_d, 0),
+        })
+
+    def _update_enemy_projectiles(self, dt):
+        alive = []
+        for p in self.enemy_projectiles:
+            p['vel'].z += CANNON_GRAVITY * dt
+            p['pos'].x += p['vel'].x * dt
+            p['pos'].y += p['vel'].y * dt
+            p['pos'].z += p['vel'].z * dt
+            p['np'].setPos(p['pos'])
+            if p['pos'].z <= -1.0:
+                dx = p['pos'].x - self.ship_pos.x
+                dy = p['pos'].y - self.ship_pos.y
+                if math.sqrt(dx*dx + dy*dy) < ENEMY_HIT_R:
+                    self._take_damage(ENEMY_DMG)
+                p['np'].removeNode()
+            else:
+                alive.append(p)
+        self.enemy_projectiles = alive
+
+    def _hit_enemy(self, dmg):
+        if self.enemy is None:
+            return
+        self.enemy['hp'] = max(0, self.enemy['hp'] - dmg)
+        if self.enemy['hp'] <= 0:
+            self._kill_enemy()
+
+    def _kill_enemy(self):
+        for p in self.enemy_projectiles:
+            p['np'].removeNode()
+        self.enemy_projectiles = []
+        self.enemy_hpbar_bg.hide()
+        self.enemy_hpbar_fill.hide()
+        self.enemy['dying']    = True
+        self.enemy['die_timer'] = 0.0
+
+    def _update_dying_enemy(self, dt):
+        e = self.enemy
+        e['die_timer'] += dt
+        t = e['die_timer']
+
+        t_game    = globalClock.getFrameTime()
+        pitch_bob = PITCH_AMPLITUDE * math.sin(t_game * (2 * math.pi / PITCH_PERIOD) + 1.3)
+        roll_bob  = ROLL_AMPLITUDE  * math.sin(t_game * (2 * math.pi / ROLL_PERIOD)  + 0.7)
+        tilt      = min(t * SINK_TILT_SPEED, 85.0)
+        e['bob'].setHpr(0, pitch_bob, roll_bob + tilt)
+
+        sink = t * SINK_SPEED
+        e['np'].setPos(e['pos'].x, e['pos'].y, -sink)
+
+        if t >= SINK_DURATION:
+            e['np'].removeNode()
+            self.enemy = None
+            self.enemy_target_np.hide()
+            self.enemy_spawn_timer = ENEMY_SPAWN_DELAY
+
     def _take_damage(self, amount):
+        if self.player_dying:
+            return
         self.health = max(0, self.health - amount)
         self._update_health_bar()
         if self.health <= 0:
@@ -1047,33 +1424,63 @@ class PirateGame(ShowBase):
     def _die(self):
         if self.docked:
             self._undock()
-
-        # Reset inventory to starting state
-        for item in self.inventory:
-            self.inventory[item] = 0
-        self.inventory['Cannonballs'] = PLAYER_AMMO_START
-        self._update_ammo_hud()
-
-        # Restore health
-        self.health = 100
-        self._update_health_bar()
-
-        # Respawn at Tortuga dock
-        self.ship_pos     = LVector3f(0, -38, 0)
-        self.ship_heading = -90.0
-        self.ship_speed   = 0.0
-        self.cam_yaw      = 270.0
-        self.ship_np.setPos(self.ship_pos)
-        self.ship_np.setH(self.ship_heading)
-
-        # Brief on-screen notice
+        self.player_dying     = True
+        self.player_die_timer = 0.0
         msg = OnscreenText(
             text='Ship sunk!  Respawning at Tortuga...',
             pos=(0, 0.15), scale=0.075,
             fg=(1.0, 0.30, 0.30, 1), shadow=(0, 0, 0, 0.9),
             align=TextNode.ACenter, mayChange=False,
         )
-        self.taskMgr.doMethodLater(2.5, lambda t: msg.destroy(), 'death_msg')
+        self.taskMgr.doMethodLater(SINK_DURATION + 0.5, lambda t: msg.destroy(), 'death_msg')
+
+    def _update_player_dying(self, dt):
+        self.player_die_timer += dt
+        t = self.player_die_timer
+
+        t_game    = globalClock.getFrameTime()
+        pitch_bob = PITCH_AMPLITUDE * math.sin(t_game * (2 * math.pi / PITCH_PERIOD))
+        roll_bob  = ROLL_AMPLITUDE  * math.sin(t_game * (2 * math.pi / ROLL_PERIOD))
+        tilt      = min(t * SINK_TILT_SPEED, 85.0)
+        self.bob_np.setHpr(0, pitch_bob, roll_bob + tilt)
+
+        sink = t * SINK_SPEED
+        self.ship_np.setPos(self.ship_pos.x, self.ship_pos.y, -sink)
+
+        if t >= SINK_DURATION:
+            self._respawn_player()
+
+    def _respawn_player(self):
+        self.player_dying     = False
+        self.player_die_timer = 0.0
+
+        # Despawn any active or dying enemy
+        if self.enemy is not None:
+            for p in self.enemy_projectiles:
+                p['np'].removeNode()
+            self.enemy_projectiles = []
+            self.enemy['np'].removeNode()
+            self.enemy = None
+            self.enemy_target_np.hide()
+            self.enemy_hpbar_bg.hide()
+            self.enemy_hpbar_fill.hide()
+            self.enemy_spawn_timer = ENEMY_SPAWN_DELAY
+
+        for item in self.inventory:
+            self.inventory[item] = 0
+        self.inventory['Cannonballs'] = PLAYER_AMMO_START
+        self._update_ammo_hud()
+
+        self.health = 100
+        self._update_health_bar()
+
+        self.ship_pos     = LVector3f(0, -38, 0)
+        self.ship_heading = -90.0
+        self.ship_speed   = 0.0
+        self.cam_yaw      = 270.0
+        self.ship_np.setPos(self.ship_pos.x, self.ship_pos.y, 0)
+        self.ship_np.setH(self.ship_heading)
+        self.bob_np.setHpr(0, 0, 0)
 
     def _update_health_bar(self):
         pct = max(0.0, self.health / 100.0)
@@ -1102,6 +1509,12 @@ class PirateGame(ShowBase):
             scale=0.055, fg=(1.0, 0.90, 0.3, 1), shadow=(0, 0, 0, 0.85),
             align=TextNode.ALeft, mayChange=True,
         )
+
+        # ── Action indicators (bottom-left, red) ─────────────────────────
+        _akw = dict(scale=0.050, fg=(0.95, 0.22, 0.22, 1),
+                    shadow=(0, 0, 0, 0.85), align=TextNode.ALeft)
+        OnscreenText(text='[LMB] Aim+  [RMB] Aim-  [Space] Cannon', pos=(-1.55, -0.76), **_akw)
+        OnscreenText(text='[F] Sea Mine',                            pos=(-1.55, -0.82), **_akw)
 
         # ── Bottom-right key hints ────────────────────────────────────────
         _kw = dict(scale=0.048, fg=(1.0, 0.88, 0.55, 1),
