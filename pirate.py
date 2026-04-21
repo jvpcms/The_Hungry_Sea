@@ -426,14 +426,25 @@ def _make_landing_ring(r=3.5, n=20, color=(0.1, 0.9, 0.1, 1.0)):
 class PirateGame(ShowBase):
     def __init__(self):
         from panda3d.core import loadPrcFileData
+        _w = _h = 0
         try:
-            import tkinter as _tk
-            _r = _tk.Tk()
-            _w, _h = _r.winfo_screenwidth(), _r.winfo_screenheight()
-            _r.destroy()
+            import ctypes
+            _u32 = ctypes.windll.user32
+            _u32.SetProcessDPIAware()
+            _w, _h = _u32.GetSystemMetrics(0), _u32.GetSystemMetrics(1)
         except Exception:
-            _w, _h = 1920, 1080
-        loadPrcFileData('', f'fullscreen true\nwin-size {_w} {_h}')
+            try:
+                import tkinter as _tk
+                _r = _tk.Tk()
+                _r.withdraw()
+                _w, _h = _r.winfo_screenwidth(), _r.winfo_screenheight()
+                _r.destroy()
+            except Exception:
+                pass
+        if _w > 0 and _h > 0:
+            loadPrcFileData('', f'fullscreen true\nwin-size {_w} {_h}')
+        else:
+            loadPrcFileData('', 'fullscreen true')
         super().__init__()
         getModelPath().prependDirectory('assets/models/BAM')
         self.disableMouse()
