@@ -43,6 +43,8 @@ jobs:
         run: python setup.py bdist_apps
         env:
           BUILD_PLATFORM: ${{ matrix.build_platform }}
+          PIP_RETRIES: 10
+          PIP_TIMEOUT: 120
 
       - name: Package (Linux / macOS)
         if: runner.os != 'Windows'
