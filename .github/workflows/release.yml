@@ -17,12 +17,15 @@ jobs:
           - os: ubuntu-latest
             artifact: the-hungry-sea-linux.zip
             platform_grep: manylinux
+            build_platform: manylinux2014_x86_64
           - os: windows-latest
             artifact: the-hungry-sea-windows.zip
             platform_grep: win
+            build_platform: win_amd64
           - os: macos-latest
             artifact: the-hungry-sea-macos.zip
             platform_grep: macos
+            build_platform: macosx_10_9_x86_64
 
     runs-on: ${{ matrix.os }}
 
@@ -38,6 +41,8 @@ jobs:
 
       - name: Build
         run: python setup.py bdist_apps
+        env:
+          BUILD_PLATFORM: ${{ matrix.build_platform }}
 
       - name: Package (Linux / macOS)
         if: runner.os != 'Windows'

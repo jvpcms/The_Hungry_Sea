@@ -47,14 +47,15 @@ if getattr(sys, 'frozen', False):
     _BASE = os.path.dirname(sys.executable)
 else:
     _BASE = os.path.dirname(os.path.abspath(__file__))
-ASSETS     = os.path.join(_BASE, 'assets')
-SOUND_DIR  = os.path.join(ASSETS, 'sound')
+os.chdir(_BASE)  # make all asset paths relative — avoids drive-letter issues on Windows
+
+ASSETS    = 'assets'
+SOUND_DIR = os.path.join(ASSETS, 'sound')
 
 def _model(name):
     bam = os.path.join(ASSETS, 'models', 'BAM', name + '.bam')
     obj = os.path.join(ASSETS, 'models', 'OBJ', name + '.obj')
-    path = bam if os.path.exists(bam) else obj
-    return path.replace('\\', '/')
+    return bam if os.path.exists(bam) else obj
 
 SHIP_MODEL       = _model('ship-large')
 ENEMY_SHIP_MODEL = _model('ship-pirate-large')
@@ -506,7 +507,7 @@ class PirateGame(ShowBase):
 
     def _setup_audio(self):
         def _load(fname):
-            p = os.path.join(SOUND_DIR, fname).replace('\\', '/')
+            p = os.path.join(SOUND_DIR, fname)
             if not os.path.exists(p):
                 return None
             try:
