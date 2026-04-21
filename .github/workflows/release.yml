@@ -44,18 +44,8 @@ jobs:
         env:
           BUILD_PLATFORM: ${{ matrix.build_platform }}
 
-      - name: Package (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          PLATFORM_DIR=$(ls build | grep "${{ matrix.platform_grep }}" | head -1)
-          mkdir -p pkg/lib
-          cp -r build/$PLATFORM_DIR/. pkg/lib/
-          printf '#!/bin/bash\nDIR="$(cd "$(dirname "$0")" && pwd)"\ncd "$DIR/lib"\n./the-hungry-sea "$@"\n' > pkg/the-hungry-sea
-          chmod +x pkg/the-hungry-sea
-          cd pkg && zip -r ../${{ matrix.artifact }} .
-
-      - name: Package (macOS)
-        if: runner.os == 'macOS'
+      - name: Package (Linux / macOS)
+        if: runner.os != 'Windows'
         run: |
           PLATFORM_DIR=$(ls build | grep "${{ matrix.platform_grep }}" | head -1)
           cd build/$PLATFORM_DIR
@@ -66,10 +56,7 @@ jobs:
         shell: pwsh
         run: |
           $dir = Get-ChildItem build | Where-Object { $_.Name -like '*${{ matrix.platform_grep }}*' } | Select-Object -First 1 -ExpandProperty Name
-          New-Item -ItemType Directory -Path pkg\lib -Force
-          Copy-Item -Recurse "build\$dir\*" "pkg\lib\"
-          Set-Content -Path "pkg\the-hungry-sea.bat" -Value "@echo off`r`ncd /d `"%~dp0lib`"`r`nthe-hungry-sea.exe %*"
-          Compress-Archive -Path "pkg\*" -DestinationPath "${{ matrix.artifact }}"
+          Compress-Archive -Path "build\$dir\*" -DestinationPath "${{ matrix.artifact }}"
 
       - name: Upload to release
         uses: softprops/action-gh-release@v2
