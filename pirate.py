@@ -425,6 +425,8 @@ def _make_landing_ring(r=3.5, n=20, color=(0.1, 0.9, 0.1, 1.0)):
 
 class PirateGame(ShowBase):
     def __init__(self):
+        from panda3d.core import loadPrcFileData
+        loadPrcFileData('', 'fullscreen true')
         super().__init__()
         getModelPath().prependDirectory('assets/models/BAM')
         self.disableMouse()
@@ -440,7 +442,6 @@ class PirateGame(ShowBase):
 
         props = WindowProperties()
         props.setCursorHidden(True)
-        props.setFullscreen(True)
         self.win.requestProperties(props)
 
         self._setup_audio()
