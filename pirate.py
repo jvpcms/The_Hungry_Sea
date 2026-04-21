@@ -9,6 +9,7 @@ from panda3d.core import (
     LVector3f, LColor,
     AmbientLight, DirectionalLight,
     LineSegs, WindowProperties, TextNode, Shader, Fog, LPoint2f,
+    getModelPath,
 )
 
 # ---------------------------------------------------------------------------
@@ -425,6 +426,7 @@ def _make_landing_ring(r=3.5, n=20, color=(0.1, 0.9, 0.1, 1.0)):
 class PirateGame(ShowBase):
     def __init__(self):
         super().__init__()
+        getModelPath().prependDirectory('assets/models/BAM')
         self.disableMouse()
 
         self.ship_pos     = LVector3f(0, -38, 0)
