@@ -53,7 +53,8 @@ SOUND_DIR  = os.path.join(ASSETS, 'sound')
 def _model(name):
     bam = os.path.join(ASSETS, 'models', 'BAM', name + '.bam')
     obj = os.path.join(ASSETS, 'models', 'OBJ', name + '.obj')
-    return bam if os.path.exists(bam) else obj
+    path = bam if os.path.exists(bam) else obj
+    return path.replace('\\', '/')
 
 SHIP_MODEL       = _model('ship-large')
 ENEMY_SHIP_MODEL = _model('ship-pirate-large')
@@ -505,7 +506,7 @@ class PirateGame(ShowBase):
 
     def _setup_audio(self):
         def _load(fname):
-            p = os.path.join(SOUND_DIR, fname)
+            p = os.path.join(SOUND_DIR, fname).replace('\\', '/')
             if not os.path.exists(p):
                 return None
             try:

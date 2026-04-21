@@ -4,7 +4,7 @@ setup(
     name='the-hungry-sea',
     options={
         'build_apps': {
-            'gui_apps': {
+            'console_apps': {
                 'the-hungry-sea': 'pirate.py',
             },
             'include_patterns': [
